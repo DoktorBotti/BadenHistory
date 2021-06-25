@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 void main(){
   runApp(BadenHistory());
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
             urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             subdomains: ['a', 'b', 'c'],
           ),
-        ], options: MapOptions(
+        ], options: MapOptions(center: LatLng(49.01358967154513, 8.404437624549605)
     )
     );
   }
