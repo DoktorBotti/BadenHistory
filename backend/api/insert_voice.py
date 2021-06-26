@@ -24,7 +24,7 @@ for i, chunk in enumerate(chunks):
     request_parameters.update({"x":random.uniform(latitude_min, latitude_max)})
     request_parameters.update({"y":random.uniform(longitude_min, longitude_max)})
     request_parameters.update({"voice":None})
-    request_parameters.update({"typ":"\"comment\""})
+    request_parameters.update({"typ":"\"question\""})
     request_parameters.update({"username":"\"main\""})
     id = requests.get(add_element_url, json = request_parameters).json().get("id")
 

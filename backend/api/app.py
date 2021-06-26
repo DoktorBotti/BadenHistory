@@ -122,10 +122,16 @@ def api_delete():
 
 @app.route('/api/ids/', methods=['GET'])
 def api_ids():
+    query_parameters = request.args
+    
+    type = query_parameters.get('type')
     conn = sqlite.connect('../data/elements.db')
     conn.row_factory = dict_factory
     cur = conn.cursor()
-    element = cur.execute("SELECT id FROM elements;").fetchall()
+    if type:
+        element = cur.execute("SELECT id FROM elements WHERE type=" + type + ";").fetchall()
+    else:
+        element = cur.execute("SELECT id FROM elements;").fetchall()
     return jsonify(element)
 
 def build_get_in_bounds(dict):
