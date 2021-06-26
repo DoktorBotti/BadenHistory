@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart' as local;
+
 
 void main() {
   runApp(BadenHistory());
@@ -39,6 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    var fc = new FetchContent();
+    Future<Record> r1 = fc.fetchRecord(1);
+    r1.then((value) => value.printDebug1());
     ourMarkers = objectsNearby
         .map((point) =>
         Marker(
@@ -117,3 +125,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+class FetchContent {
+
+  double latitude_min = 48.99;
+  double latitude_max = 49.036;
+  double longitude_min = 8.33;
+  double longitude_max = 8.47;
+
+  Future<Record> fetchRecord(final int id) async{
+    final response = await http.get(Uri.parse('http://192.168.178.37:5000/api/elements/?id='+id.toString()));
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      return Record.fromJson(jsonDecode(response.body)[0]);
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load record');
+    }
+  }
+}
+
+class Record {
+  final int id;
+  final double x;
+  final double y;
+  final String? image;
+  final String text;
+  final String? voice;
+  final String type;
+  final String? username;
+
+  const Record({required this.id, required this.x, required this.y, required this.image, required this.text, required this.voice, required this.type, required this.username});
+
+  factory Record.fromJson(Map<String, dynamic> json) {
+    return Record(
+      id: json['id'],
+      x: json['x'],
+      y: json['y'],
+      image: json['image'],
+      text: json['text'],
+      voice: json['voice'],
+      type: json['type'],
+      username: json['username']
+    );
+  }
+  void printDebug1() {
+    print(id.toString() + x.toString() + " " + y.toString() + (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type + (username?.toString() ?? "") );
+  }
+}
+
