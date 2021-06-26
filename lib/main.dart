@@ -164,7 +164,7 @@ class FetchContent {
   double latitude_max = 49.036;
   double longitude_min = 8.33;
   double longitude_max = 8.47;
-  List<RecordViewData> collectibles = List.empty();
+  List<RecordViewData> collectibles = List.empty(growable: true);
 
   Future<Image> getImageByID(final int id) async {
     //TODO: get image from backend
@@ -184,6 +184,8 @@ class FetchContent {
         await Record.get(id.values.first).then((value) {record=value;local=true;}).onError((error, stackTrace) {print(error);});
         if(record == null) {
           await fetchRecord(id.values.first).then((value) => record=value).onError((error, stackTrace) {print(error);});
+        } else {
+          print("found record locally");
         }
         if(record != null) {
           collectibles.add(RecordViewData(record!, await getImageByID(record!.id)));
@@ -195,7 +197,11 @@ class FetchContent {
       }
     } else {
       // Use local data
-      SharedPreferences.getKeys()
+      final prefs = await SharedPreferences.getInstance();
+      for(final key in prefs.getKeys()) {
+        final record = await Record.get(int.parse(key));
+        collectibles.add(RecordViewData(record, await getImageByID(record.id)));
+      }
       throw Exception('Failed to load record');
     }
   }
@@ -279,8 +285,8 @@ class Record {
   final String title;
   final String text;
   final String place;
-  final double latitude;
-  final double longitude;
+  final double? latitude;
+  final double? longitude;
   final String? voice;
   final String type;
   final String? username;
