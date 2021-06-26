@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ws/DetailScreen.dart';
 import 'package:flutter_ws/MapScreen.dart';
 import 'package:flutter_ws/RecordsAndFetcher.dart';
-
+import 'package:flutter_ws/SoundComponents.dart';
+import 'package:latlong2/latlong.dart';
 
 void main() {
   runApp(BadenHistory());
@@ -29,13 +30,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: 3,
+        length: 4,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Baden History'),
             bottom: TabBar(
               indicatorColor: Colors.white,
-              isScrollable: false,
+              isScrollable: true,
               tabs: [
                 Tab(
                   text: 'My Findings',
@@ -45,7 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Tab(
                   text: 'Quests',
                   icon: Icon(Icons.access_time),
-                )
+                ),
+                Tab(text: 'AudioStuff TMP', icon: Icon(Icons.access_alarms))
               ],
             ),
           ),
@@ -56,14 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
               DetailScreen(
                 imagePath: "assets/testimage.jpg",
               ),
+              AudioGui()
             ],
             physics: NeverScrollableScrollPhysics(),
           ),
         ));
   }
 }
-
-
 
 class FindingsScreen extends StatefulWidget {
   const FindingsScreen({Key? key}) : super(key: key);
@@ -100,4 +101,3 @@ class _FindingsScreenState extends State<FindingsScreen> {
     ));
   }
 }
-
