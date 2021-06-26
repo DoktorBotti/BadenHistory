@@ -73,7 +73,11 @@ def build_insert(dict):
     x = dict.get('x')
     y = dict.get('y')
     image = dict.get('image')
+    title = dict.get('title')
     text = dict.get('text')
+    place = dict.get('place')
+    latitude = dict.get('latitude')
+    longitude = dict.get('longitude')
     voice = dict.get('voice')
     typ = dict.get('typ')
     username = dict.get('username')
@@ -81,8 +85,16 @@ def build_insert(dict):
     values = "(" + x + ", " + y
     if image:
         elements, values = add_to_elemts_and_values(elements, values, "image", image)
+    if title:
+        elements, values = add_to_elemts_and_values(elements, values, "title", title)
     if text:
         elements, values = add_to_elemts_and_values(elements, values, "text", text)
+    if place:
+        elements, values = add_to_elemts_and_values(elements, values, "place", place)
+    if latitude:
+        elements, values = add_to_elemts_and_values(elements, values, "latitude", latitude)
+    if longitude:
+        elements, values = add_to_elemts_and_values(elements, values, "longitude", longitude)
     if voice:
         elements, values = add_to_elemts_and_values(elements, values, "voice", voice)
     if typ:
