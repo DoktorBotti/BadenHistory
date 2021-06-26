@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:flutter_ws/DetailScreen.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart' as local;
@@ -54,7 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
           body: TabBarView(children: [
             Center(child: Text('Findings Tab')),
             MapContainer(),
-            Center(child: Text('Quests Tab'))
+            DetailScreen(
+              imagePath: "assets/testimage.jpg",
+            ),
           ]),
         ));
   }
