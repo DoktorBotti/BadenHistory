@@ -30,6 +30,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -66,6 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: NeverScrollableScrollPhysics(),
           ),
         ));
+  }
+
+  @override
+  void initState() {
+    final fb = FetchContent();
   }
 }
 
