@@ -48,8 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Future<Record> r1 = fc.fetchRecord(1);
     r1.then((value) => value.printDebug1());
     ourMarkers = objectsNearby
-        .map((point) =>
-        Marker(
+        .map((point) => Marker(
             point: point,
             width: 60,
             height: 60,
@@ -64,64 +63,74 @@ class _HomeScreenState extends State<HomeScreen> {
     PopupController _popupController = PopupController();
     MapController _mapController = MapController();
 
-
-    return Scaffold(
-        appBar: AppBar(title: Text('Baden History'),),
-        body: FlutterMap(
-            mapController: _mapController,
-            layers: [
-              TileLayerOptions(
-                minZoom: 7,
-                maxZoom: 25,
-                backgroundColor: Colors.black,
-                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: ['a', 'b', 'c'],
-              ),
-              MarkerClusterLayerOptions(
-                  markers: ourMarkers,
-                  maxClusterRadius: 190,
-                  disableClusteringAtZoom: 16,
-                  size: Size(50, 50),
-                  fitBoundsOptions: FitBoundsOptions(
-                      padding: EdgeInsets.all(50)),
-                  polygonOptions: PolygonOptions(
-                      borderColor: Colors.blueAccent,
-                      color: Colors.black12,
-                      borderStrokeWidth: 3),
-                  popupOptions: PopupOptions(
-                      popupSnap: PopupSnap.markerTop,
-                      popupController: _popupController,
-                      popupBuilder: (_, marker) =>
-                          Container(
-                            alignment: Alignment.center,
-                            height: 80,
-                            width: 80,
-                            decoration: BoxDecoration(
-                                color: Colors.black, shape: BoxShape.rectangle),
-                            child: Text(
-                              'Go near this object to find out more',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          )),
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            color: Colors.orange, shape: BoxShape.circle),
-                        child: Text('${markers.length}'));
-                  })
-            ],
-            options: MapOptions(
-                center: LatLng(49.01358967154513, 8.404437624549605),
-                plugins: [MarkerClusterPlugin()],
-                onTap: (_) =>
-                    _popupController
-                        .
-                    hidePopup
-                      (
-                    )
-            )
-        )
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text('Baden History'),
+            bottom: TabBar(
+              indicatorColor: Colors.white,
+              isScrollable: false,
+              tabs: [
+                Tab(
+                  text: 'My Findings',
+                  icon: Icon(Icons.favorite),
+                ),
+                Tab(text: 'Map', icon: Icon(Icons.map_rounded)),
+                Tab(text: 'Quests', icon: Icon(Icons.access_time),)
+              ],
+            ),
+          ),
+          body: FlutterMap(
+              mapController: _mapController,
+              layers: [
+                TileLayerOptions(
+                  minZoom: 7,
+                  maxZoom: 25,
+                  backgroundColor: Colors.black,
+                  urlTemplate:
+                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: ['a', 'b', 'c'],
+                ),
+                MarkerClusterLayerOptions(
+                    markers: ourMarkers,
+                    maxClusterRadius: 190,
+                    disableClusteringAtZoom: 16,
+                    size: Size(50, 50),
+                    fitBoundsOptions:
+                        FitBoundsOptions(padding: EdgeInsets.all(50)),
+                    polygonOptions: PolygonOptions(
+                        borderColor: Colors.blueAccent,
+                        color: Colors.black12,
+                        borderStrokeWidth: 3),
+                    popupOptions: PopupOptions(
+                        popupSnap: PopupSnap.markerTop,
+                        popupController: _popupController,
+                        popupBuilder: (_, marker) => Container(
+                              alignment: Alignment.center,
+                              height: 80,
+                              width: 80,
+                              decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  shape: BoxShape.rectangle),
+                              child: Text(
+                                'Go near this object to find out more',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            )),
+                    builder: (context, markers) {
+                      return Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: Colors.orange, shape: BoxShape.circle),
+                          child: Text('${markers.length}'));
+                    })
+              ],
+              options: MapOptions(
+                  center: LatLng(49.01358967154513, 8.404437624549605),
+                  plugins: [MarkerClusterPlugin()],
+                  onTap: (_) => _popupController.hidePopup()))),
+      initialIndex: 1,
     );
   }
 }
@@ -175,4 +184,3 @@ class Record {
     print(id.toString() + x.toString() + " " + y.toString() + (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type + (username?.toString() ?? "") );
   }
 }
-
