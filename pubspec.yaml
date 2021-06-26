@@ -33,6 +33,7 @@ dependencies:
   latlong: ^0.6.1
   flutter_map: any
   flutter_map_marker_cluster: any
+  flutter_map_location: any
 
 dev_dependencies:
   flutter_test:

@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_location/flutter_map_location.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_ws/DetailScreen.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart' as local;
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(BadenHistory());
@@ -53,13 +53,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          body: TabBarView(children: [
-            FindingsScreen(),
-            MapContainer(),
-            DetailScreen(
-              imagePath: "assets/testimage.jpg",
-            ),
-          ]),
+          body: TabBarView(
+            children: [
+              FindingsScreen(),
+              MapContainer(),
+              DetailScreen(
+                imagePath: "assets/testimage.jpg",
+              ),
+            ],
+            physics: NeverScrollableScrollPhysics(),
+          ),
         ));
   }
 }
@@ -75,11 +78,11 @@ class _MapContainerState extends State<MapContainer> {
   @override
   void initState() {
     var fc = FetchContent();
-    Future<Record> r1 = fc.fetchRecord(1);
-    r1.then((value) => value.printDebug1());
+    fc.syncData();
+    // Future<Record> r1 = fc.fetchRecord(1);
+    // r1.then((value) => value.printDebug1());
     _ourMarkers = objectsNearby
-        .map((point) =>
-        Marker(
+        .map((point) => Marker(
             point: point,
             width: 60,
             height: 60,
@@ -101,59 +104,68 @@ class _MapContainerState extends State<MapContainer> {
     LatLng(50.05733722085694, 7.35620412422381)
   ];
   PopupController _popupController = PopupController();
-  MapController _mapController = MapController(
-  );
+  MapController _mapController = MapController();
   List<Marker> _ourMarkers = [];
 
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
-        mapController: _mapController,
-        layers: [
-          TileLayerOptions(
-            minZoom: 7,
-            maxZoom: 25,
-            backgroundColor: Colors.black,
-            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            subdomains: ['a', 'b', 'c'],
-          ),
-          MarkerClusterLayerOptions(
-              markers: _ourMarkers,
-              maxClusterRadius: 190,
-              disableClusteringAtZoom: 16,
-              size: Size(50, 50),
-              fitBoundsOptions: FitBoundsOptions(padding: EdgeInsets.all(50)),
-              polygonOptions: PolygonOptions(
-                  borderColor: Colors.blueAccent,
-                  color: Colors.black12,
-                  borderStrokeWidth: 3),
-              popupOptions: PopupOptions(
-                  popupSnap: PopupSnap.markerTop,
-                  popupController: _popupController,
-                  popupBuilder: (_, marker) =>
-                      Container(
-                        alignment: Alignment.center,
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
-                            color: Colors.black, shape: BoxShape.rectangle),
-                        child: Text(
-                          'Go near this object to find out more',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      )),
-              builder: (context, markers) {
-                return Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: Colors.orange, shape: BoxShape.circle),
-                    child: Text('${markers.length}'));
-              })
-        ],
-        options: MapOptions(
-            center: LatLng(49.01358967154513, 8.404437624549605),
-            plugins: [MarkerClusterPlugin()],
-            onTap: (_) => _popupController.hidePopup()));
+      mapController: _mapController,
+      nonRotatedLayers: [],
+      options: MapOptions(
+          center: LatLng(49.01358967154513, 8.404437624549605),
+          plugins: [MarkerClusterPlugin(), LocationPlugin()],
+          onTap: (_) => _popupController.hidePopup(),
+          interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+      layers: [
+        TileLayerOptions(
+          minZoom: 7,
+          maxZoom: 25,
+          backgroundColor: Colors.black,
+          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: ['a', 'b', 'c'],
+        ),
+        LocationOptions(locationButton(), onLocationUpdate: (LatLngData? ld) {
+          print("${ld?.location}");
+        }, onLocationRequested: (LatLngData? ld) {
+          if (ld == null) {
+            return;
+          }
+          _mapController.move(ld.location, 16.0);
+        }),
+        MarkerClusterLayerOptions(
+            markers: _ourMarkers,
+            maxClusterRadius: 190,
+            disableClusteringAtZoom: 16,
+            size: Size(50, 50),
+            fitBoundsOptions: FitBoundsOptions(padding: EdgeInsets.all(50)),
+            polygonOptions: PolygonOptions(
+                borderColor: Colors.blueAccent,
+                color: Colors.black12,
+                borderStrokeWidth: 3),
+            popupOptions: PopupOptions(
+                popupSnap: PopupSnap.markerTop,
+                popupController: _popupController,
+                popupBuilder: (_, marker) => Container(
+                      alignment: Alignment.center,
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.black, shape: BoxShape.rectangle),
+                      child: Text(
+                        'Go near this object to find out more',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )),
+            builder: (context, markers) {
+              return Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: Colors.orange, shape: BoxShape.circle),
+                  child: Text('${markers.length}'));
+            })
+      ],
+    );
   }
 }
 
@@ -163,23 +175,64 @@ class FetchContent {
   double latitude_max = 49.036;
   double longitude_min = 8.33;
   double longitude_max = 8.47;
+  List<RecordViewData> collectibles = List.empty(growable: true);
 
   Future<Image> getImageByID(final int id) async {
     //TODO: get image from backend
     return Image.asset("assets/testimage.jpg");
   }
 
-  Future<Record> fetchRecord(final int id) async {
-    final response = await http.get(Uri.parse(
-        'http://192.168.178.37:5000/api/elements/?id=' + id.toString()));
+  void syncData() async {
+    final response = await http.get(Uri.parse('http://192.168.178.37:5000/api/ids'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      return Record.fromJson(jsonDecode(response.body)[0]);
+      List<dynamic> content = jsonDecode(response.body);
+      for(Map<String, dynamic> id in content) {
+        print("Looking at id " + id.values.first.toString());
+        Record? record;
+        var local = false;
+        await Record.get(id.values.first).then((value) {record=value;local=true;}).onError((error, stackTrace) {print(error);});
+        if(record == null) {
+          await fetchRecord(id.values.first).then((value) => record=value).onError((error, stackTrace) {print(error);});
+        } else {
+          print("found record locally");
+        }
+        if(record != null) {
+          collectibles.add(RecordViewData(record!, await getImageByID(record!.id)));
+          if(!local) {
+            record!.save();
+            print("saved record " + id.values.first.toString());
+          }
+        }
+      }
+    } else {
+      // Use local data
+      final prefs = await SharedPreferences.getInstance();
+      for(final key in prefs.getKeys()) {
+        final record = await Record.get(int.parse(key));
+        collectibles.add(RecordViewData(record, await getImageByID(record.id)));
+      }
+      throw Exception('Failed to load record');
+    }
+  }
+
+  Future<Record?> fetchRecord(final int id) async{
+    final response = await http.get(Uri.parse('http://192.168.178.37:5000/api/elements/?id='+id.toString()));
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      final content = jsonDecode(response.body);
+      print(content.toString());
+      try {
+        return Record.fromJson(content[0]);
+      } catch(e) {
+        return new Future<Record>.error(id.toString() + " not found on server or parsing error");
+      }
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
-      throw Exception('Failed to load record');
+      return new Future<Record>.error("server response != 200");
     }
   }
 }
@@ -231,7 +284,7 @@ class RecordViewData {
 Future<List<RecordViewData>> getVisitedRecords() async {
   var fc = FetchContent();
   var record = await fc.fetchRecord(1);
-  var image = await fc.getImageByID(record.id);
+  var image = await fc.getImageByID(record!.id);
   return [RecordViewData(record, image)];
 }
 
@@ -240,29 +293,100 @@ class Record {
   final double x;
   final double y;
   final String? image;
+  final String title;
   final String text;
+  final String place;
+  final double? latitude;
+  final double? longitude;
   final String? voice;
   final String type;
   final String? username;
 
-  const Record(
-      {required this.id, required this.x, required this.y, required this.image, required this.text, required this.voice, required this.type, required this.username});
+  const Record({required this.title, required this.place, required this.latitude, required this.longitude, required this.id, required this.x, required this.y, required this.image, required this.text, required this.voice, required this.type, required this.username});
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
-        id: json['id'],
-        x: json['x'],
-        y: json['y'],
-        image: json['image'],
-        text: json['text'],
-        voice: json['voice'],
-        type: json['type'],
-        username: json['username']
+      id: json['id'],
+      x: json['x'],
+      y: json['y'],
+      image: json['image'],
+      title: json['title'],
+      text: json['text'],
+      place: json['place'],
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      voice: json['voice'],
+      type: json['type'],
+      username: json['username']
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id' : id,
+      'x':x ,
+      'y':y ,
+      'image':image ,
+      'title':title ,
+      'text':text ,
+      'place':place ,
+      'latitude':latitude ,
+      'longitude':longitude ,
+      'voice':voice ,
+      'type':type ,
+      'username':username
+    };
+  }
+
+  void save() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(id.toString(), jsonEncode(this));
+  }
+
+  static Future<Record> get(final int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final result = prefs.get(id.toString());
+    if(result != null) {
+      return Record.fromJson(jsonDecode(result.toString()));
+    }
+    return new Future<Record>.error("no local value found");
+  }
+
   void printDebug1() {
     print(id.toString() + x.toString() + " " + y.toString() +
         (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type +
         (username?.toString() ?? ""));
   }
+}
+LocationButtonBuilder locationButton() {
+  return (BuildContext context, ValueNotifier<LocationServiceStatus> status,
+      Function onPressed) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+        child: FloatingActionButton(
+            child: ValueListenableBuilder<LocationServiceStatus>(
+                valueListenable: status,
+                builder: (BuildContext context, LocationServiceStatus value,
+                    Widget? child) {
+                  switch (value) {
+                    case LocationServiceStatus.disabled:
+                    case LocationServiceStatus.permissionDenied:
+                    case LocationServiceStatus.unsubscribed:
+                      return const Icon(
+                        Icons.location_disabled,
+                        color: Colors.white,
+                      );
+                    default:
+                      return const Icon(
+                        Icons.location_searching,
+                        color: Colors.white,
+                      );
+                  }
+                }),
+            onPressed: () => onPressed()),
+      ),
+    );
+  };
 }
