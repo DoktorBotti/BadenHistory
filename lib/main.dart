@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:flutter_ws/DetailScreen.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,9 +54,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           body: TabBarView(children: [
-            Center(child: Text('Findings Tab')),
+            FindingsScreen(),
             MapContainer(),
-            Center(child: Text('Quests Tab'))
+            DetailScreen(
+              imagePath: "assets/testimage.jpg",
+            ),
           ]),
         ));
   }
@@ -98,7 +102,8 @@ class _MapContainerState extends State<MapContainer> {
     LatLng(50.05733722085694, 7.35620412422381)
   ];
   PopupController _popupController = PopupController();
-  MapController _mapController = MapController();
+  MapController _mapController = MapController(
+  );
   List<Marker> _ourMarkers = [];
 
   @override
@@ -159,6 +164,12 @@ class FetchContent {
   double latitude_max = 49.036;
   double longitude_min = 8.33;
   double longitude_max = 8.47;
+  List<RecordViewData> collectibles = List.empty();
+
+  Future<Image> getImageByID(final int id) async {
+    //TODO: get image from backend
+    return Image.asset("assets/testimage.jpg");
+  }
 
   void syncData() async {
     final response = await http.get(Uri.parse('http://192.168.178.37:5000/api/ids'));
@@ -174,8 +185,8 @@ class FetchContent {
         if(record == null) {
           await fetchRecord(id.values.first).then((value) => record=value).onError((error, stackTrace) {print(error);});
         }
-        print(local.toString());
         if(record != null) {
+          collectibles.add(RecordViewData(record!, await getImageByID(record!.id)));
           if(!local) {
             record!.save();
             print("saved record " + id.values.first.toString());
@@ -183,8 +194,8 @@ class FetchContent {
         }
       }
     } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
+      // Use local data
+      SharedPreferences.getKeys()
       throw Exception('Failed to load record');
     }
   }
@@ -207,6 +218,57 @@ class FetchContent {
       return new Future<Record>.error("server response != 200");
     }
   }
+}
+
+class FindingsScreen extends StatefulWidget {
+  const FindingsScreen({Key? key}) : super(key: key);
+
+  @override
+  _FindingsScreenState createState() => _FindingsScreenState();
+}
+
+class _FindingsScreenState extends State<FindingsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FutureBuilder<List<RecordViewData>>(future: getVisitedRecords(),
+      builder: (context, rec) {
+        if(rec.hasData){
+          return ListView.builder(
+              itemCount: rec.data!.length,
+              itemBuilder: (context, i){
+                return Card(
+                  child: Container(
+                    child: Text(rec.data![i].baseRecord.text),
+                  ),
+                );
+              });
+        }
+        else
+          {
+            return Card(
+              child: Container(
+                child: Text("no data"),
+              ),
+            );
+          }
+      },)
+    );
+  }
+}
+
+class RecordViewData {
+  RecordViewData(this.baseRecord, this.recordImg);
+
+  Record baseRecord;
+  Image recordImg;
+}
+
+Future<List<RecordViewData>> getVisitedRecords() async {
+  var fc = FetchContent();
+  var record = await fc.fetchRecord(1);
+  var image = await fc.getImageByID(record!.id);
+  return [RecordViewData(record, image)];
 }
 
 class Record {
@@ -274,6 +336,8 @@ class Record {
   }
 
   void printDebug1() {
-    print(id.toString() + " " + x.toString() + " " + y.toString()+ " "  + (image?.toString() ?? "")+ " "  + text+ " "  + (voice?.toString() ?? "") + " " + type+ " "  + (username?.toString() ?? "") );
+    print(id.toString() + x.toString() + " " + y.toString() +
+        (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type +
+        (username?.toString() ?? ""));
   }
 }

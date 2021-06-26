@@ -1,7 +1,7 @@
 import requests
 import shutil
 import random
-import os.path
+import os
 
 latitude_min = 48.99
 latitude_max = 49.036
@@ -14,15 +14,12 @@ add_element_url = "http://localhost:5000/api/elements/insert/"
 response = requests.get(main_url)
 items = response.json().get("records")
 for item in items:
-   id = item.get("imdasid")
-   image = requests.get(get_image_url+id, stream=True)
-   with open("../data/"+id+".jpg", 'wb') as f:
-      image.raw.decode_content = True
-      shutil.copyfileobj(image.raw, f)
+   imdasid = item.get("imdasid")
+
    request_parameters = {}
    request_parameters.update({"x":random.uniform(latitude_min, latitude_max)})
    request_parameters.update({"y":random.uniform(longitude_min, longitude_max)})
-   request_parameters.update({"image":"\""+id+"\""})
+   #request_parameters.update({"image":"\""+imdasid+"\""})
    request_parameters.update({"title":"\'" + item.get("objekttitel") + "\'"})
    request_parameters.update({"text":"\'" + item.get("text") + "\'"})
    request_parameters.update({"place":"\'" + item.get("orte")[0].get("term") + "\'"})
@@ -31,4 +28,12 @@ for item in items:
    request_parameters.update({"voice":None})
    request_parameters.update({"typ":"\"collectable\""})
    request_parameters.update({"username":"\"main\""})
-   requests.get(add_element_url, json = request_parameters)
+   id = requests.get(add_element_url, json = request_parameters).json().get("id")
+
+   reponse = requests.get(get_image_url+imdasid, stream=True)
+   f = open(imdasid, 'wb')
+   reponse.raw.decode_content = True
+   shutil.copyfileobj(reponse.raw, f)
+   requests.post("http://localhost:5000/api/elements/" + str(id) + "/upload_image/", files={'file': open(f.name, "rb")})
+   f.close()
+   os.remove(f.name)
