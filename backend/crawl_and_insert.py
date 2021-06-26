@@ -2,6 +2,11 @@ import requests
 import shutil
 import random
 
+latitude_min = 48.99
+latitude_max = 49.036
+longitude_min = 8.33
+longitude_max = 8.47
+
 main_url = "https://katalog.landesmuseum.de/expodb/r1/export/aib?qry=text+any+%22*Arch%C3%A4ologie%20in%20Baden*%22&fmt=json&fst=1&len=2"
 get_image_url = "https://katalog.landesmuseum.de/expodb/r1/image/aib?id="
 add_element_url = "http://localhost:5000/api/elements/insert/"
@@ -14,8 +19,8 @@ for item in items:
        image.raw.decode_content = True
        shutil.copyfileobj(image.raw, f)
     request_parameters = {}
-    request_parameters.update({"x":random.randrange(0, 100)})
-    request_parameters.update({"y":random.randrange(0, 100)})
+    request_parameters.update({"x":random.uniform(latitude_min, latitude_max)})
+    request_parameters.update({"y":random.uniform(longitude_min, longitude_max)})
     request_parameters.update({"image":"\""+id+"\""})
     request_parameters.update({"title":"\'" + item.get("objekttitel") + "\'"})
     request_parameters.update({"text":"\'" + item.get("text") + "\'"})
