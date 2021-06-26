@@ -52,10 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    MapController controller = MapController();
+    PopupController _popupController = PopupController();
+    MapController _mapController = MapController();
 
     return FlutterMap(
-        mapController: controller,
+        mapController: _mapController,
         layers: [
           TileLayerOptions(
             minZoom: 7,
@@ -74,6 +75,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderColor: Colors.blueAccent,
                   color: Colors.black12,
                   borderStrokeWidth: 3),
+              popupOptions: PopupOptions(
+                  popupSnap: PopupSnap.markerTop,
+                  popupController: _popupController,
+                  popupBuilder: (_, marker) => Container(
+                        alignment: Alignment.center,
+                        height: 250,
+                        width: 250,
+                        decoration: BoxDecoration(
+                            color: Colors.black, shape: BoxShape.rectangle),
+                        child: Text(
+                          'Go near this object to find out more',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )),
               builder: (context, markers) {
                 return Container(
                     alignment: Alignment.center,
@@ -84,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         options: MapOptions(
             center: LatLng(49.01358967154513, 8.404437624549605),
-            plugins: [MarkerClusterPlugin()]));
+            plugins: [MarkerClusterPlugin()],
+        onTap: (_) => _popupController.hidePopup()));
   }
 }
