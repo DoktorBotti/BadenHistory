@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -53,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           body: TabBarView(children: [
-            Center(child: Text('Findings Tab')),
+            FindingsScreen(),
             MapContainer(),
             DetailScreen(
               imagePath: "assets/testimage.jpg",
@@ -100,7 +101,8 @@ class _MapContainerState extends State<MapContainer> {
     LatLng(50.05733722085694, 7.35620412422381)
   ];
   PopupController _popupController = PopupController();
-  MapController _mapController = MapController();
+  MapController _mapController = MapController(
+  );
   List<Marker> _ourMarkers = [];
 
   @override
@@ -162,8 +164,14 @@ class FetchContent {
   double longitude_min = 8.33;
   double longitude_max = 8.47;
 
-  Future<Record> fetchRecord(final int id) async{
-    final response = await http.get(Uri.parse('http://192.168.178.37:5000/api/elements/?id='+id.toString()));
+  Future<Image> getImageByID(final int id) async {
+    //TODO: get image from backend
+    return Image.asset("assets/testimage.jpg");
+  }
+
+  Future<Record> fetchRecord(final int id) async {
+    final response = await http.get(Uri.parse(
+        'http://192.168.178.37:5000/api/elements/?id=' + id.toString()));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -176,6 +184,57 @@ class FetchContent {
   }
 }
 
+class FindingsScreen extends StatefulWidget {
+  const FindingsScreen({Key? key}) : super(key: key);
+
+  @override
+  _FindingsScreenState createState() => _FindingsScreenState();
+}
+
+class _FindingsScreenState extends State<FindingsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FutureBuilder<List<RecordViewData>>(future: getVisitedRecords(),
+      builder: (context, rec) {
+        if(rec.hasData){
+          return ListView.builder(
+              itemCount: rec.data!.length,
+              itemBuilder: (context, i){
+                return Card(
+                  child: Container(
+                    child: Text(rec.data![i].baseRecord.text),
+                  ),
+                );
+              });
+        }
+        else
+          {
+            return Card(
+              child: Container(
+                child: Text("no data"),
+              ),
+            );
+          }
+      },)
+    );
+  }
+}
+
+class RecordViewData {
+  RecordViewData(this.baseRecord, this.recordImg);
+
+  Record baseRecord;
+  Image recordImg;
+}
+
+Future<List<RecordViewData>> getVisitedRecords() async {
+  var fc = FetchContent();
+  var record = await fc.fetchRecord(1);
+  var image = await fc.getImageByID(record.id);
+  return [RecordViewData(record, image)];
+}
+
 class Record {
   final int id;
   final double x;
@@ -186,21 +245,24 @@ class Record {
   final String type;
   final String? username;
 
-  const Record({required this.id, required this.x, required this.y, required this.image, required this.text, required this.voice, required this.type, required this.username});
+  const Record(
+      {required this.id, required this.x, required this.y, required this.image, required this.text, required this.voice, required this.type, required this.username});
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
-      id: json['id'],
-      x: json['x'],
-      y: json['y'],
-      image: json['image'],
-      text: json['text'],
-      voice: json['voice'],
-      type: json['type'],
-      username: json['username']
+        id: json['id'],
+        x: json['x'],
+        y: json['y'],
+        image: json['image'],
+        text: json['text'],
+        voice: json['voice'],
+        type: json['type'],
+        username: json['username']
     );
   }
   void printDebug1() {
-    print(id.toString() + x.toString() + " " + y.toString() + (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type + (username?.toString() ?? "") );
+    print(id.toString() + x.toString() + " " + y.toString() +
+        (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type +
+        (username?.toString() ?? ""));
   }
 }
