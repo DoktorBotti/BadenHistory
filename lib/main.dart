@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 
 void main() {
@@ -37,30 +38,52 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Marker> ourMarkers = [];
 
   @override
-  Widget build(BuildContext context) {
-    MapController controller = MapController();
+  void initState() {
     ourMarkers = objectsNearby
-        .map((point) =>
-        Marker(
+        .map((point) => Marker(
             point: point,
             width: 60,
             height: 60,
             builder: (context) =>
                 Icon(Icons.pin_drop, size: 60, color: Colors.blueAccent)))
         .toList();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MapController controller = MapController();
+
     return FlutterMap(
         mapController: controller,
         layers: [
           TileLayerOptions(
-            minZoom: 1,
-            maxZoom: 18,
+            minZoom: 7,
+            maxZoom: 25,
             backgroundColor: Colors.black,
             urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             subdomains: ['a', 'b', 'c'],
           ),
-          MarkerLayerOptions(markers:ourMarkers)
+          MarkerClusterLayerOptions(
+              markers: ourMarkers,
+              maxClusterRadius: 190,
+              disableClusteringAtZoom: 16,
+              size: Size(50, 50),
+              fitBoundsOptions: FitBoundsOptions(padding: EdgeInsets.all(50)),
+              polygonOptions: PolygonOptions(
+                  borderColor: Colors.blueAccent,
+                  color: Colors.black12,
+                  borderStrokeWidth: 3),
+              builder: (context, markers) {
+                return Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: Colors.orange, shape: BoxShape.circle),
+                    child: Text('${markers.length}'));
+              })
         ],
-        options:
-        MapOptions(center: LatLng(49.01358967154513, 8.404437624549605)));
+        options: MapOptions(
+            center: LatLng(49.01358967154513, 8.404437624549605),
+            plugins: [MarkerClusterPlugin()]));
   }
 }
