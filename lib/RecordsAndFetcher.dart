@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unique_list/unique_list.dart';
 import 'dart:io';
@@ -12,10 +13,14 @@ class FetchContent {
   double latitude_max = 49.036;
   double longitude_min = 8.33;
   double longitude_max = 8.47;
+
   List<RecordViewData> collectibles = UniqueList();
 
   static final FetchContent _instance = FetchContent._internal();
   factory FetchContent() => _instance;
+
+  LatLng user_position = LatLng(49.01358967154513, 8.404437624549605);
+
 
   FetchContent._internal() {
     syncData();
