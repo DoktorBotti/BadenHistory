@@ -164,7 +164,7 @@ class QuestionMarker extends Marker {
             height: 60,
             width: 60,
             point: LatLng(questionData.latitude, questionData.longitude),
-            builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
+            builder: (BuildContext ctx) => Icon(Icons.ac_unit));
 
   final Question questionData;
 }

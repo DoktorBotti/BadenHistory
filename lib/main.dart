@@ -62,7 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
               FindingsScreen(),
               MapContainer(),
               DetailScreen(
+                location: "Karlsruhe",
                 imagePath: "assets/testimage.jpg",
+                title: "Exponat Nr. 15",
+                description: "Das ist Exponat Nr. 15, Lorem ipsum usw.",
               ),
               AudioGui()
             ],
