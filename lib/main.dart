@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_location/flutter_map_location.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_ws/DetailScreen.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart' as local;
-
 
 void main() {
   runApp(BadenHistory());
@@ -53,13 +53,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          body: TabBarView(children: [
-            FindingsScreen(),
-            MapContainer(),
-            DetailScreen(
-              imagePath: "assets/testimage.jpg",
-            ),
-          ]),
+          body: TabBarView(
+            children: [
+              FindingsScreen(),
+              MapContainer(),
+              DetailScreen(
+                imagePath: "assets/testimage.jpg",
+              ),
+            ],
+            physics: NeverScrollableScrollPhysics(),
+          ),
         ));
   }
 }
@@ -78,8 +81,7 @@ class _MapContainerState extends State<MapContainer> {
     Future<Record> r1 = fc.fetchRecord(1);
     r1.then((value) => value.printDebug1());
     _ourMarkers = objectsNearby
-        .map((point) =>
-        Marker(
+        .map((point) => Marker(
             point: point,
             width: 60,
             height: 60,
@@ -101,59 +103,68 @@ class _MapContainerState extends State<MapContainer> {
     LatLng(50.05733722085694, 7.35620412422381)
   ];
   PopupController _popupController = PopupController();
-  MapController _mapController = MapController(
-  );
+  MapController _mapController = MapController();
   List<Marker> _ourMarkers = [];
 
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
-        mapController: _mapController,
-        layers: [
-          TileLayerOptions(
-            minZoom: 7,
-            maxZoom: 25,
-            backgroundColor: Colors.black,
-            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            subdomains: ['a', 'b', 'c'],
-          ),
-          MarkerClusterLayerOptions(
-              markers: _ourMarkers,
-              maxClusterRadius: 190,
-              disableClusteringAtZoom: 16,
-              size: Size(50, 50),
-              fitBoundsOptions: FitBoundsOptions(padding: EdgeInsets.all(50)),
-              polygonOptions: PolygonOptions(
-                  borderColor: Colors.blueAccent,
-                  color: Colors.black12,
-                  borderStrokeWidth: 3),
-              popupOptions: PopupOptions(
-                  popupSnap: PopupSnap.markerTop,
-                  popupController: _popupController,
-                  popupBuilder: (_, marker) =>
-                      Container(
-                        alignment: Alignment.center,
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
-                            color: Colors.black, shape: BoxShape.rectangle),
-                        child: Text(
-                          'Go near this object to find out more',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      )),
-              builder: (context, markers) {
-                return Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: Colors.orange, shape: BoxShape.circle),
-                    child: Text('${markers.length}'));
-              })
-        ],
-        options: MapOptions(
-            center: LatLng(49.01358967154513, 8.404437624549605),
-            plugins: [MarkerClusterPlugin()],
-            onTap: (_) => _popupController.hidePopup()));
+      mapController: _mapController,
+      nonRotatedLayers: [],
+      options: MapOptions(
+          center: LatLng(49.01358967154513, 8.404437624549605),
+          plugins: [MarkerClusterPlugin(), LocationPlugin()],
+          onTap: (_) => _popupController.hidePopup(),
+          interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+      layers: [
+        TileLayerOptions(
+          minZoom: 7,
+          maxZoom: 25,
+          backgroundColor: Colors.black,
+          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: ['a', 'b', 'c'],
+        ),
+        LocationOptions(locationButton(), onLocationUpdate: (LatLngData? ld) {
+          print("${ld?.location}");
+        }, onLocationRequested: (LatLngData? ld) {
+          if (ld == null) {
+            return;
+          }
+          _mapController.move(ld.location, 16.0);
+        }),
+        MarkerClusterLayerOptions(
+            markers: _ourMarkers,
+            maxClusterRadius: 190,
+            disableClusteringAtZoom: 16,
+            size: Size(50, 50),
+            fitBoundsOptions: FitBoundsOptions(padding: EdgeInsets.all(50)),
+            polygonOptions: PolygonOptions(
+                borderColor: Colors.blueAccent,
+                color: Colors.black12,
+                borderStrokeWidth: 3),
+            popupOptions: PopupOptions(
+                popupSnap: PopupSnap.markerTop,
+                popupController: _popupController,
+                popupBuilder: (_, marker) => Container(
+                      alignment: Alignment.center,
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.black, shape: BoxShape.rectangle),
+                      child: Text(
+                        'Go near this object to find out more',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )),
+            builder: (context, markers) {
+              return Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: Colors.orange, shape: BoxShape.circle),
+                  child: Text('${markers.length}'));
+            })
+      ],
+    );
   }
 }
 
@@ -265,4 +276,36 @@ class Record {
         (image?.toString() ?? "") + text + (voice?.toString() ?? "") + type +
         (username?.toString() ?? ""));
   }
+}
+LocationButtonBuilder locationButton() {
+  return (BuildContext context, ValueNotifier<LocationServiceStatus> status,
+      Function onPressed) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+        child: FloatingActionButton(
+            child: ValueListenableBuilder<LocationServiceStatus>(
+                valueListenable: status,
+                builder: (BuildContext context, LocationServiceStatus value,
+                    Widget? child) {
+                  switch (value) {
+                    case LocationServiceStatus.disabled:
+                    case LocationServiceStatus.permissionDenied:
+                    case LocationServiceStatus.unsubscribed:
+                      return const Icon(
+                        Icons.location_disabled,
+                        color: Colors.white,
+                      );
+                    default:
+                      return const Icon(
+                        Icons.location_searching,
+                        color: Colors.white,
+                      );
+                  }
+                }),
+            onPressed: () => onPressed()),
+      ),
+    );
+  };
 }
