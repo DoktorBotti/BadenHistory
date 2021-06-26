@@ -1,4 +1,4 @@
-FROM python:3.4-alpine
+FROM python:3.9-alpine
 COPY . /web
 WORKDIR /web/api
 RUN pip install -r ./requirements.txt

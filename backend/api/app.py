@@ -23,6 +23,15 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 @app.route('/api/elements/all/', methods=['GET'])
+def api_get_all():
+    conn = sqlite.connect('../data/elements.db')
+    conn.row_factory = dict_factory
+    cur = conn.cursor()
+    elements_in_bounds = cur.execute("SELECT * FROM elements").fetchall()
+    return jsonify(elements_in_bounds)
+
+
+@app.route('/api/elements/in_bounds/', methods=['GET'])
 def api_get_in_bounds():
     query_parameters = request.args
     conn = sqlite.connect('../data/elements.db')
@@ -39,14 +48,11 @@ def api_get_image_by_id():
 
 @app.route('/api/elements/insert/', methods=['GET'])
 def api_insert():
-    query_parameters = request.values
+    query_parameters = request.json
     conn = sqlite.connect('../data/elements.db')
     conn.row_factory = dict_factory
     cur = conn.cursor()
     insert = build_insert(query_parameters)
-    print("The insert")
-    print(insert)
-    print("should be here")
     cur.execute(insert)
     conn.commit()
     return "Inserted object"
@@ -60,6 +66,26 @@ def api_get_by_id():
     conn.row_factory = dict_factory
     cur = conn.cursor()
     element = cur.execute("SELECT * FROM elements WHERE id=" + id + ";").fetchall()
+    return jsonify(element)
+
+@app.route('/api/delete/', methods=['GET'])
+def api_delete():
+    query_parameters = request.args
+    
+    id = query_parameters.get('id')
+    conn = sqlite.connect('../data/elements.db')
+    conn.row_factory = dict_factory
+    cur = conn.cursor()
+    element = cur.execute("DELETE FROM elements WHERE id=" + id + ";")
+    conn.commit()
+    return "Element " + id + " gelöscht."
+
+@app.route('/api/ids/', methods=['GET'])
+def api_ids():
+    conn = sqlite.connect('../data/elements.db')
+    conn.row_factory = dict_factory
+    cur = conn.cursor()
+    element = cur.execute("SELECT id FROM elements;").fetchall()
     return jsonify(element)
 
 def build_get_in_bounds(dict):
@@ -82,7 +108,7 @@ def build_insert(dict):
     typ = dict.get('typ')
     username = dict.get('username')
     elements = "(x, y"
-    values = "(" + x + ", " + y
+    values = "(" + str(x) + ", " + str(y)
     if image:
         elements, values = add_to_elemts_and_values(elements, values, "image", image)
     if title:
@@ -103,7 +129,7 @@ def build_insert(dict):
         elements, values = add_to_elemts_and_values(elements, values, "username", username)
     elements += ")"
     values += ")"
-    return "insert into elements " + elements + " values " + values + ";"
+    return "insert into elements " + elements + " values " + str(values) + ";"
         
 
 def add_to_elemts_and_values(elements, values, element, value):
