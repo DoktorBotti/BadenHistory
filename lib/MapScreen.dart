@@ -22,7 +22,8 @@ class _MapContainerState extends State<MapContainer> {
     // Future<Record> r1 = fc.fetchRecord(1);
     // r1.then((value) => value.printDebug1());
     _ourMarkers.addAll(objectsNearby
-        .map((point) => Marker(
+        .map((point) =>
+        Marker(
             point: point,
             width: 60,
             height: 60,
@@ -75,7 +76,8 @@ class _MapContainerState extends State<MapContainer> {
           subdomains: ['a', 'b', 'c'],
         ),
         LocationOptions(locationButton(), onLocationUpdate: (LatLngData? ld) {
-          print("${ld?.location}");
+          var fc = FetchContent();
+          fc.setLocation(ld!.location);
         }, onLocationRequested: (LatLngData? ld) {
           if (ld == null) {
             return;
@@ -95,17 +97,48 @@ class _MapContainerState extends State<MapContainer> {
             popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
-                popupBuilder: (_, marker) => Container(
+                popupBuilder: (_, marker) {
+                  if(marker is QuestionMarker){
+                    return Container(
                       alignment: Alignment.center,
                       height: 80,
                       width: 80,
                       decoration: BoxDecoration(
                           color: Colors.black, shape: BoxShape.rectangle),
                       child: Text(
-                        'Go near this object to find out more',
+                        'I\'m a question!',
                         style: TextStyle(color: Colors.white),
                       ),
-                    )),
+                    );
+                  }
+                  else if(marker is RecordMarker){
+                    return Container(
+                      alignment: Alignment.center,
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.black, shape: BoxShape.rectangle),
+                      child: Text(
+                        'I am an report!',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
+
+                  return Container(
+                    alignment: Alignment.center,
+                    height: 80,
+                    width: 80,
+                    decoration: BoxDecoration(
+                        color: Colors.black, shape: BoxShape.rectangle),
+                    child: Text(
+                      'AAAAAAHHHHHH',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+
+            ),
             builder: (context, markers) {
               return Container(
                   alignment: Alignment.center,
@@ -151,14 +184,32 @@ LocationButtonBuilder locationButton() {
   };
 }
 
-class QuestionMarker extends Marker {
-  QuestionMarker({required this.questionData})
+class RecordMarker extends Marker {
+  RecordMarker(
+      {required this.longitude, required this.latitude, required this.isFound})
       : super(
-            anchorPos: AnchorPos.align(AnchorAlign.top),
-            height: 60,
-            width: 60,
-            point: LatLng(questionData.latitude, questionData.longitude),
-            builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
+      anchorPos: AnchorPos.align(AnchorAlign.center),
+      height: 60,
+      width: 60,
+      point: LatLng(latitude, longitude),
+      builder: (BuildContext ctx) =>
+          Icon(Icons.flag_rounded, color: Colors.blueAccent)
+  );
+
+  final double longitude;
+  final double latitude;
+  final bool isFound;
+}
+
+class QuestionMarker extends Marker {
+  QuestionMarker({required this.questionData, required this.isFound})
+      : super(
+      anchorPos: AnchorPos.align(AnchorAlign.center),
+      height: 60,
+      width: 60,
+      point: LatLng(questionData.latitude, questionData.longitude),
+      builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
 
   final Question questionData;
+  final bool isFound;
 }

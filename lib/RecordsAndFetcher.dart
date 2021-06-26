@@ -13,6 +13,9 @@ class FetchContent {
   double longitude_min = 8.33;
   double longitude_max = 8.47;
 
+  double long_location = 0.0;
+  double lat_location = 0.0;
+
   List<RecordViewData> collectibles = UniqueList();
 
   static final FetchContent _instance = FetchContent._internal();
@@ -116,6 +119,10 @@ class FetchContent {
       // then throw an exception.
       return new Future<Record>.error("server response != 200");
     }
+  }
+  void setLocation(LatLng newPos){
+    long_location = newPos.longitude;
+    lat_location = newPos.latitude;
   }
 }
 
