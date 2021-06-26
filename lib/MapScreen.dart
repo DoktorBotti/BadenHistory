@@ -4,6 +4,7 @@ import 'package:flutter_map_location/flutter_map_location.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:unique_list/unique_list.dart';
 
 import 'RecordsAndFetcher.dart';
 
@@ -15,32 +16,36 @@ class MapContainer extends StatefulWidget {
 }
 
 class _MapContainerState extends State<MapContainer> {
+
   @override
   void initState() {
+    objectsNearby.clear();
     var fc = FetchContent();
-    fc.syncData();
+    fc.syncData().then((value) {
+      for(final collectible in fc.collectibles) {
+        objectsNearby.add(LatLng(collectible.baseRecord.x, collectible.baseRecord.y));
+        print(collectible.baseRecord.x.toString() + collectible.baseRecord.y.toString());
+      }
+      print(objectsNearby);
+      var markers = UniqueList<Marker>();
+          markers.addAll(objectsNearby
+          .map((point) => Marker(
+          point: point,
+          width: 60,
+          height: 60,
+          builder: (context) =>
+              Icon(Icons.flag_rounded, size: 60, color: Colors.blueAccent)))
+          .toList());
+        setState(() {
+          _ourMarkers = markers;
+        });
+    });
     // Future<Record> r1 = fc.fetchRecord(1);
     // r1.then((value) => value.printDebug1());
-    _ourMarkers.addAll(objectsNearby
-        .map((point) => Marker(
-            point: point,
-            width: 60,
-            height: 60,
-            builder: (context) =>
-                Icon(Icons.flag_rounded, size: 60, color: Colors.blueAccent)))
-        .toList());
     super.initState();
   }
 
   List<LatLng> objectsNearby = [
-    LatLng(49.01358967154513, 8.404437624549605),
-    LatLng(50.03111935248694, 9.50641335880519),
-    LatLng(50.59453579029447, 9.09409549394147),
-    LatLng(49.05782579488481, 9.99637829327629),
-    LatLng(48.28978577551132, 8.11155515664592),
-    LatLng(50.83918481074443, 8.59033195643448),
-    LatLng(48.93699220770547, 8.91040842128563),
-    LatLng(50.05733722085694, 7.35620412422381)
   ];
   PopupController _popupController = PopupController();
   MapController _mapController = MapController();
@@ -82,6 +87,7 @@ class _MapContainerState extends State<MapContainer> {
           }
           _mapController.move(ld.location, 16.0);
         }),
+
         MarkerClusterLayerOptions(
             markers: _ourMarkers,
             maxClusterRadius: 190,
