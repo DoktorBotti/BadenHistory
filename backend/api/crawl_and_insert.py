@@ -40,4 +40,3 @@ for item in items:
    f.close()
    os.remove(f.name)
 
-   requests.post("http://localhost:5000/api/elements/" + str(id) + "/upload_voice/", files={'file': open("", "rb")})
