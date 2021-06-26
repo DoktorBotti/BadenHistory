@@ -20,7 +20,7 @@ request_parameters.update({"text":"\'Und was ist mit der Gurke?\'"})
 request_parameters.update({"typ":"\"question\""})
 request_parameters.update({"username":"\"main\""})
 request_parameters.update({"time":time.time()})
-parent_id = requests.get(add_element_url, json = request_parameters).json().get("id")
+parent_id = requests.post(add_element_url, json = request_parameters).json().get("id")
 
 myaudio = AudioSegment.from_file("Example.wav", "wav") 
 chunk_length_ms = 80000 # pydub calculates in millisec 

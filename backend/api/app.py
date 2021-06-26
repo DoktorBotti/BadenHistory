@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, send_file
 import sqlite3 as sqlite
 import os
 import shutil
+import time
 app = Flask(__name__)
 
 
@@ -56,9 +57,9 @@ def api_get_voice_by_id(id):
     cur = conn.cursor()
     voice = cur.execute("SELECT voice FROM elements WHERE id=" + id + ";").fetchall()[0].get("voice")
     print(voice)
-    return send_file("../data/" + voice + ".wav", as_attachment=True)
+    return send_file("../data/" + voice, as_attachment=True)
 
-@app.route('/api/elements/insert/', methods=['GET'])
+@app.route('/api/elements/insert/', methods=['POST'])
 def api_insert():
     query_parameters = request.json
     conn = sqlite.connect('../data/elements.db')
@@ -90,10 +91,11 @@ def api_upload_voice(id):
     cur = conn.cursor()
     file = request.files.get("file")
     filename = file.filename
-    with open("../data/"+filename+".wav", 'wb') as f:
+    timestamp = time.time()
+    with open("../data/"+str(timestamp)+"_"+filename, 'wb') as f:
         shutil.copyfileobj(file, f)
 
-    cur.execute("UPDATE elements SET voice="+filename+" WHERE id="+id+";")
+    cur.execute("UPDATE elements SET voice=\""+str(timestamp)+"_"+filename+"\" WHERE id="+id+";")
     conn.commit()
     return "Inserted object"
 

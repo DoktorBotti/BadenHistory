@@ -34,6 +34,8 @@ dependencies:
   flutter_map: any
   flutter_map_marker_cluster: any
   flutter_map_location: any
+  flutter_sound: any
+  permission_handler: any
 
 dev_dependencies:
   flutter_test:

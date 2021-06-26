@@ -104,3 +104,4 @@ ENV/
 /data/*.jpg
 /data/*.wav
 /api/*.wav
+/data/*.aac
