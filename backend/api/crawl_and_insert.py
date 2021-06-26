@@ -2,6 +2,7 @@ import requests
 import shutil
 import random
 import os
+import time
 
 latitude_min = 48.99
 latitude_max = 49.036
@@ -28,6 +29,7 @@ for item in items:
    request_parameters.update({"voice":None})
    request_parameters.update({"typ":"\"collectable\""})
    request_parameters.update({"username":"\"main\""})
+   request_parameters.update({"time":time.time()})
    id = requests.get(add_element_url, json = request_parameters).json().get("id")
 
    reponse = requests.get(get_image_url+imdasid, stream=True)
@@ -37,3 +39,5 @@ for item in items:
    requests.post("http://localhost:5000/api/elements/" + str(id) + "/upload_image/", files={'file': open(f.name, "rb")})
    f.close()
    os.remove(f.name)
+
+   requests.post("http://localhost:5000/api/elements/" + str(id) + "/upload_voice/", files={'file': open("", "rb")})

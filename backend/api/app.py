@@ -153,6 +153,8 @@ def build_insert(dict):
     voice = dict.get('voice')
     typ = dict.get('typ')
     username = dict.get('username')
+    link_to = dict.get('link_to')
+    time = dict.get('time')
     elements = "(x, y"
     values = "(" + str(x) + ", " + str(y)
     if image:
@@ -173,14 +175,18 @@ def build_insert(dict):
         elements, values = add_to_elemts_and_values(elements, values, "type", typ)
     if username:
         elements, values = add_to_elemts_and_values(elements, values, "username", username)
+    if link_to:
+        elements, values = add_to_elemts_and_values(elements, values, "link_to", link_to)
+    if time:
+        elements, values = add_to_elemts_and_values(elements, values, "time", time)
     elements += ")"
     values += ")"
     return "insert into elements " + elements + " values " + str(values) + ";"
         
 
 def add_to_elemts_and_values(elements, values, element, value):
-    elements += ", " + element
-    values += ", " + value
+    elements += ", " + str(element)
+    values += ", " + str(value)
     return elements, values
 
 
