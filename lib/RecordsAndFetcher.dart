@@ -3,37 +3,56 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class RecordViewData {
-  RecordViewData(this.baseRecord, this.recordImg);
-
-  Record baseRecord;
-  Image recordImg;
-}
-
-Future<List<RecordViewData>> getVisitedRecords() async {
-  var fc = FetchContent();
-  var record = await fc.fetchRecord(1);
-  var image = await fc.getImageByID(record!.id);
-  return [RecordViewData(record, image)];
-}
+import 'package:unique_list/unique_list.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class FetchContent {
   double latitude_min = 48.99;
   double latitude_max = 49.036;
   double longitude_min = 8.33;
   double longitude_max = 8.47;
-  List<RecordViewData> collectibles = List.empty(growable: true);
+
+  List<RecordViewData> collectibles = UniqueList();
+
+  static final FetchContent _instance = FetchContent._internal();
+
+  factory FetchContent() => _instance;
+
   LatLng user_position = LatLng(49.01358967154513, 8.404437624549605);
 
-  Future<Image> getImageByID(final int id) async {
-    //TODO: get image from backend
-    return Image.asset("assets/testimage.jpg");
+  FetchContent._internal() {
+    syncData();
   }
 
-  void syncData() async {
-    final response =
-    await http.get(Uri.parse('http://192.168.178.37:5000/api/ids'));
+  Future<String> getImageByID(final int id) async {
+    // http://192.168.178.37:5000/api/images/21/
+    final api = "http://192.168.178.37:5000/api/images/" + id.toString();
+    print(api);
+    //TODO: get image from backend
+    return api;
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
+  Future<File> _localFile(String filename) async {
+    final path = await _localPath;
+    return File('$path/$filename');
+  }
+
+  // Future<File> writeFile() async {
+  //   final file = await _localFile;
+  //   // Write the file
+  //   return file.writeAsString('');
+  // }
+
+  Future<bool> syncData() async {
+    print("syncing");
+    final response = await http.get(
+        Uri.parse('http://192.168.178.37:5000/api/ids/?type="collectable"'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -73,8 +92,9 @@ class FetchContent {
         final record = await Record.get(int.parse(key));
         collectibles.add(RecordViewData(record, await getImageByID(record.id)));
       }
-      throw Exception('Failed to load record');
+      print('Failed to load record');
     }
+    return new Future<bool>.value(true);
   }
 
   Future<Record?> fetchRecord(final int id) async {
@@ -99,6 +119,31 @@ class FetchContent {
   }
 }
 
+class Question {
+  final int id;
+  final String questionTitle;
+  final double latitude;
+  final double longitude;
+
+  const Question(
+      {required this.id,
+      required this.questionTitle,
+      required this.longitude,
+      required this.latitude});
+}
+
+class RecordViewData {
+  RecordViewData(this.baseRecord, this.path);
+
+  Record baseRecord;
+  String path;
+}
+
+Future<List<RecordViewData>> getVisitedRecords() async {
+  var fc = FetchContent();
+  return fc.collectibles;
+}
+
 class Record {
   final int id;
   final double x;
@@ -115,17 +160,17 @@ class Record {
 
   const Record(
       {required this.title,
-        required this.place,
-        required this.latitude,
-        required this.longitude,
-        required this.id,
-        required this.x,
-        required this.y,
-        required this.image,
-        required this.text,
-        required this.voice,
-        required this.type,
-        required this.username});
+      required this.place,
+      required this.latitude,
+      required this.longitude,
+      required this.id,
+      required this.x,
+      required this.y,
+      required this.image,
+      required this.text,
+      required this.voice,
+      required this.type,
+      required this.username});
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
