@@ -18,9 +18,6 @@ class _MapContainerState extends State<MapContainer> {
   @override
   void initState() {
     var fc = FetchContent();
-    fc.syncData();
-    // Future<Record> r1 = fc.fetchRecord(1);
-    // r1.then((value) => value.printDebug1());
     _ourMarkers = objectsNearby
         .map((point) => Marker(
         point: point,
