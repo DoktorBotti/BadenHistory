@@ -18,14 +18,17 @@ class _MapContainerState extends State<MapContainer> {
   @override
   void initState() {
     var fc = FetchContent();
-    _ourMarkers = objectsNearby
+    fc.syncData();
+    // Future<Record> r1 = fc.fetchRecord(1);
+    // r1.then((value) => value.printDebug1());
+    _ourMarkers.addAll(objectsNearby
         .map((point) => Marker(
-        point: point,
-        width: 60,
-        height: 60,
-        builder: (context) =>
-            Icon(Icons.pin_drop, size: 60, color: Colors.blueAccent)))
-        .toList();
+            point: point,
+            width: 60,
+            height: 60,
+            builder: (context) =>
+                Icon(Icons.flag_rounded, size: 60, color: Colors.blueAccent)))
+        .toList());
     super.initState();
   }
 
@@ -34,7 +37,6 @@ class _MapContainerState extends State<MapContainer> {
     LatLng(50.03111935248694, 9.50641335880519),
     LatLng(50.59453579029447, 9.09409549394147),
     LatLng(49.05782579488481, 9.99637829327629),
-    LatLng(49.27305446340209, 9.17189737808250),
     LatLng(48.28978577551132, 8.11155515664592),
     LatLng(50.83918481074443, 8.59033195643448),
     LatLng(48.93699220770547, 8.91040842128563),
@@ -42,7 +44,14 @@ class _MapContainerState extends State<MapContainer> {
   ];
   PopupController _popupController = PopupController();
   MapController _mapController = MapController();
-  List<Marker> _ourMarkers = [];
+  List<Marker> _ourMarkers = [
+    QuestionMarker(
+        questionData: Question(
+            id: 1337,
+            questionTitle: "why tho?",
+            latitude: 49.27305446340209,
+            longitude: 9.17189737808250))
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +61,10 @@ class _MapContainerState extends State<MapContainer> {
       options: MapOptions(
           center: LatLng(49.01358967154513, 8.404437624549605),
           plugins: [MarkerClusterPlugin(), LocationPlugin()],
-          onTap: (_) => _popupController.hidePopup(),
+          onTap: (handle) => {
+                _popupController.hidePopup()
+                // TODO: potentially more cleanup logic here
+              },
           interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate),
       layers: [
         TileLayerOptions(
@@ -84,16 +96,16 @@ class _MapContainerState extends State<MapContainer> {
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
                 popupBuilder: (_, marker) => Container(
-                  alignment: Alignment.center,
-                  height: 80,
-                  width: 80,
-                  decoration: BoxDecoration(
-                      color: Colors.black, shape: BoxShape.rectangle),
-                  child: Text(
-                    'Go near this object to find out more',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )),
+                      alignment: Alignment.center,
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.black, shape: BoxShape.rectangle),
+                      child: Text(
+                        'Go near this object to find out more',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )),
             builder: (context, markers) {
               return Container(
                   alignment: Alignment.center,
@@ -105,7 +117,6 @@ class _MapContainerState extends State<MapContainer> {
     );
   }
 }
-
 
 LocationButtonBuilder locationButton() {
   return (BuildContext context, ValueNotifier<LocationServiceStatus> status,
@@ -138,4 +149,16 @@ LocationButtonBuilder locationButton() {
       ),
     );
   };
+}
+
+class QuestionMarker extends Marker {
+  QuestionMarker({required this.questionData})
+      : super(
+            anchorPos: AnchorPos.align(AnchorAlign.top),
+            height: 60,
+            width: 60,
+            point: LatLng(questionData.latitude, questionData.longitude),
+            builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
+
+  final Question questionData;
 }

@@ -9,7 +9,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_ws/SoundComponents.dart';
 import 'package:latlong2/latlong.dart';
 
-
 void main() {
   runApp(BadenHistory());
 }
@@ -102,26 +101,30 @@ class _FindingsScreenState extends State<FindingsScreen> {
                       //rec.data![i].path,
                       ExpansionTile(
                           // leading:
-                          title: Row(
-                              children: [
-                              Container(
-                                height:0.1*MediaQuery.of(context).size.height,
-                              width: 0.3*MediaQuery.of(context).size.width, // 20%
-                              child: Image.network(rec.data![i].path,fit: BoxFit.fitHeight),
-                                alignment: Alignment.center,
-                              ),
-                              Container(
-                                height:0.1*MediaQuery.of(context).size.height,
-                              width: 0.5*MediaQuery.of(context).size.width, // 60%
-                                alignment: Alignment.centerLeft,
+                          title: Row(children: [
+                            Container(
+                              height: 0.1 * MediaQuery.of(context).size.height,
+                              width: 0.3 *
+                                  MediaQuery.of(context).size.width, // 20%
+                              child: Image.network(rec.data![i].path,
+                                  fit: BoxFit.fitHeight),
+                              alignment: Alignment.center,
+                            ),
+                            Container(
+                              height: 0.1 * MediaQuery.of(context).size.height,
+                              width: 0.5 *
+                                  MediaQuery.of(context).size.width, // 60%
+                              alignment: Alignment.centerLeft,
                               child: Text(rec.data![i].baseRecord.title),
-                              ),
-                              ]),
+                            ),
+                          ]),
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(10.0),
-                              child: Text(rec.data![i].baseRecord.place,
-                                style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                              child: Text(
+                                rec.data![i].baseRecord.place,
+                                style: TextStyle(
+                                    color: Colors.black.withOpacity(0.6)),
                               ),
                             ),
                             Image.network(rec.data![i].path),
@@ -129,7 +132,8 @@ class _FindingsScreenState extends State<FindingsScreen> {
                               padding: const EdgeInsets.all(10.0),
                               child: Text(
                                 rec.data![i].baseRecord.text,
-                                style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                                style: TextStyle(
+                                    color: Colors.black.withOpacity(0.6)),
                               ),
                             ),
                             ButtonBar(
@@ -148,9 +152,8 @@ class _FindingsScreenState extends State<FindingsScreen> {
                                   child: const Text('ACTION 2'),
                                 ),
                               ],
-                            ),]
-
-                      ),
+                            ),
+                          ]),
                     ],
                   ),
                 );
@@ -165,6 +168,7 @@ class _FindingsScreenState extends State<FindingsScreen> {
       },
     ));
   }
+
   Future<List<RecordViewData>> getVisitedRecords() async {
     var fc = FetchContent();
     return fc.collectibles;
