@@ -30,7 +30,7 @@ for item in items:
    request_parameters.update({"typ":"\"collectable\""})
    request_parameters.update({"username":"\"main\""})
    request_parameters.update({"time":time.time()})
-   id = requests.get(add_element_url, json = request_parameters).json().get("id")
+   id = requests.post(add_element_url, json = request_parameters).json().get("id")
 
    reponse = requests.get(get_image_url+imdasid, stream=True)
    f = open(imdasid, 'wb')
