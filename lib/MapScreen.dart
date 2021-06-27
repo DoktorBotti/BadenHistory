@@ -23,7 +23,7 @@ class _MapContainerState extends State<MapContainer> {
     var fc = FetchContent();
     fc.syncData().then((value) {
       for(final collectible in fc.collectibles) {
-        objectsNearby.add(LatLng(collectible.baseRecord.x, collectible.baseRecord.y));
+        objectsNearby.add(LatLng(collectible.baseRecord.x!, collectible.baseRecord.y!));
         print(collectible.baseRecord.x.toString() + collectible.baseRecord.y.toString());
       }
       print(objectsNearby);

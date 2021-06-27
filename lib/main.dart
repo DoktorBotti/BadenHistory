@@ -129,14 +129,14 @@ class _FindingsScreenState extends State<FindingsScreen> {
                               width: 0.5 *
                                   MediaQuery.of(context).size.width, // 60%
                               alignment: Alignment.centerLeft,
-                              child: Text(rec.data![i].baseRecord.title),
+                              child: Text(rec.data![i].baseRecord.title!),
                             ),
                           ]),
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: Text(
-                                rec.data![i].baseRecord.place,
+                                rec.data![i].baseRecord.place!,
                                 style: TextStyle(
                                     color: Colors.black.withOpacity(0.6)),
                               ),
@@ -145,7 +145,7 @@ class _FindingsScreenState extends State<FindingsScreen> {
                             Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: Text(
-                                rec.data![i].baseRecord.text,
+                                rec.data![i].baseRecord.text!,
                                 style: TextStyle(
                                     color: Colors.black.withOpacity(0.6)),
                               ),
