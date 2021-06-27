@@ -34,7 +34,19 @@ Add custom tours with external links to other museums and online sources. Recomm
 
 Here are some impressions from our app:
 
+Already visited exhibits are shown in black while not places that are not visited yet are shown in blue. When zoomed out the exhibits gets clustered for an easier overview. The exhibits are distributed around the city to motivate people to explore their own city.
+
 <img src="./assets/screenshot_map.jpg" width="40%">
 <img src="./assets/screenshot_map_location.jpg" width="40%">
+<img src="./assets/screenshot_map_stacked.jpg" width="40%">
 
-Already visited exhibits are shown in black while not places that are not visited yet are shown in blue. The exhibits are distributed around the city to motivate people to explore their own city.
+There is a list of all the exhibit that were already found and explored. It is possible to show more details on the exhibits by expanding the information or changing to the detail page.
+
+<img src="./assets/screenshot_findings_list.jpg" width="40%">
+<img src="./assets/screenshot_finding_opened.jpg" width="40%">
+<img src="./assets/screenshot_finding_details.jpg" width="40%">
+
+Also there is a chat function to talk about events.
+
+<img src="./assets/screenshot_finding_details.jpg" width="40%">
+
