@@ -148,17 +148,15 @@ class _MapContainerState extends State<MapContainer> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    FutureBuilder(future: buldFc.getImageByID(marker is RecordMarker ? marker.id : marker is QuestionMarker ? marker.id : 0),
-                                    builder: (context, img) =>
-                                        DetailScreen(
-                                      location: "Karlsruhe",
-                                      imagePath: img.data.toString(),
-                                      title: "Exponat Nr. 15",
-                                      description: "Das ist Exponat Nr. 15, Lorem ipsum usw.",
-                                    )
-                                  ))
-                            );
+                                builder: (context) => FutureBuilder(
+                                    future: buldFc
+                                        .getImageByID(marker is RecordMarker
+                                            ? marker.id
+                                            : marker is QuestionMarker
+                                                ? marker.id
+                                                : 0),
+                                    builder: (context, img) => Text(
+                                        "This would have been a detail"))));
                       },
                       child: FutureBuilder(
                           future: buldFc.getImageByID(marker is QuestionMarker
