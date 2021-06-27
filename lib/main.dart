@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
         length: 4,
+        initialIndex: 1,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Baden History'),

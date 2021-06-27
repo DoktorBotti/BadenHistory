@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 
 typedef _Fn = void Function();
@@ -24,7 +25,9 @@ class _AudioGuiState extends State<AudioGui> {
   bool _mRecorderIsInited = false;
   bool _mplaybackReady = false;
   var url;
+  var fromURI = 'app'+'.aac';
   final String user = 'app';
+  final myController = TextEditingController();
 
 
   @override
@@ -50,6 +53,7 @@ class _AudioGuiState extends State<AudioGui> {
 
     _mRecorder!.closeAudioSession();
     _mRecorder = null;
+    myController.dispose();
     super.dispose();
   }
 
@@ -69,7 +73,7 @@ class _AudioGuiState extends State<AudioGui> {
   void record() {
     _mRecorder!
         .startRecorder(
-      toFile: user+'.aac',
+      toFile: fromURI,
       codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
     )
         .then((value) {
@@ -80,7 +84,6 @@ class _AudioGuiState extends State<AudioGui> {
   void stopRecorder() async {
     await _mRecorder!.stopRecorder().then((value) {
       setState(() {
-        print(value);
         url = value;
         _mplaybackReady = true;
       });
@@ -95,7 +98,7 @@ class _AudioGuiState extends State<AudioGui> {
     print(DateTime.now().millisecondsSinceEpoch.toString());
     _mPlayer!
         .startPlayer(
-        fromURI: user+'.aac',
+        fromURI: fromURI,
         codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
         whenFinished: () {
           setState(() {});
@@ -118,9 +121,9 @@ class _AudioGuiState extends State<AudioGui> {
       'typ': 'comment',
       'username': 'app',
     };
-    final uri = Uri.http('10.0.2.2:5000', '/api/elements/insert/', queryParameters);
+    final uri = Uri.http('192.168.178.37:5000', '/api/elements/insert/', queryParameters);
     final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/elements/insert/'),
+        Uri.parse('http://192.168.178.37:5000/api/elements/insert/'),
         headers: <String, String>{
       'Content-type': 'application/json',
       },
@@ -133,23 +136,24 @@ class _AudioGuiState extends State<AudioGui> {
 
     final content = jsonDecode(response.body);
 
-    var request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:5000/api/elements/' + content["id"].toString() + '/upload_voice/'));
-    //add text fields
-    //request.fields["text_field"] = text;
-    //create multipart using filepath, string or bytes
+    var request = http.MultipartRequest('POST', Uri.parse('http://192.168.178.37:5000/api/elements/' + content["id"].toString() + '/upload_voice/'));
     var voice = await http.MultipartFile.fromPath("file", url);
-    //add multipart to request
     request.files.add(voice);
     var res = await request.send();
 
-    //var request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:5000/api/elements/' + content["id"].toString() + '/upload_voice/'));
-    //request.files.add(
-    //    await http.MultipartFile.fromPath(
-    //        'voice',
-    //        url
-    //    )
-    //);
-    //var res = await request.send();
+  }
+
+  void download() async {
+    final uri = Uri.http('192.168.178.37:5000', '/api/voices/'+myController.text+'/');
+
+    final response = await http.get(uri);
+
+    print(response.body);
+    var tempDir = await getTemporaryDirectory();
+    var path = '${tempDir.path}/flutter_sound_tmp.wav';
+    var file = new File(path+myController.text+".aac");
+    file.writeAsBytes(response.bodyBytes);
+    fromURI = file.absolute.path;
   }
 
 // ----------------------------- UI --------------------------------------------
@@ -173,6 +177,13 @@ class _AudioGuiState extends State<AudioGui> {
       return null;
     }
     return _mPlayer!.isStopped ? upload : stopPlayer;
+  }
+
+  _Fn? getDownloadFn() {
+    if (!_mPlayerIsInited || !_mplaybackReady || !_mRecorder!.isStopped) {
+      return null;
+    }
+    return _mPlayer!.isStopped ? download : stopPlayer;
   }
 
   @override
@@ -279,17 +290,24 @@ class _AudioGuiState extends State<AudioGui> {
             ),
             child: Row(children: [
               ElevatedButton(
-                onPressed: getUploadFn(),
+                onPressed: getDownloadFn(),
                 //color: Colors.white,
                 //disabledColor: Colors.grey,
-                child: Text('Upload'),
+                child: Text('Download'),
               ),
               SizedBox(
                 width: 20,
               ),
-              Text(_mPlayer!.isPlaying
-                  ? 'Playback in progress'
-                  : 'Player is stopped'),
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  controller: myController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter an id',
+                  ),
+                ),
+              ),
             ]),
           ),
         ],

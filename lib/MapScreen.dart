@@ -4,6 +4,7 @@ import 'package:flutter_map_location/flutter_map_location.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:unique_list/unique_list.dart';
 
 import 'RecordsAndFetcher.dart';
 
@@ -17,42 +18,48 @@ class MapContainer extends StatefulWidget {
 class _MapContainerState extends State<MapContainer> {
   @override
   void initState() {
+    var newMarkers = UniqueList<Marker>();
     var fc = FetchContent();
-    fc.syncData();
+    fc.syncData().then((value) {
+      for (final collectible in fc.collectibles) {
+        bool alreadyFound = fc.isFound(collectible.baseRecord.id);
+        if(collectible.baseRecord.longitude == null || collectible.baseRecord.latitude == null){
+          continue;
+        }
+        if (collectible.baseRecord.type == "collectable") {
+          newMarkers.add(RecordMarker(
+              longitude: collectible.baseRecord.longitude!,
+              latitude: collectible.baseRecord.latitude!,
+              isFound: alreadyFound));
+        } else if (collectible.baseRecord.type == "question") {
+          var questionD = Question(
+              id: collectible.baseRecord.id,
+              questionTitle: collectible.baseRecord.title!,
+              longitude: collectible.baseRecord.longitude!,
+              latitude: collectible.baseRecord.latitude!);
+          newMarkers.add(
+              QuestionMarker(questionData: questionD, isFound: alreadyFound));
+        }
+        // then it must be comment or audio. Ignoring.
+
+        print(collectible.baseRecord.x.toString() +
+            collectible.baseRecord.y.toString());
+      }
+      setState(() {
+        _ourMarkers = newMarkers;
+      });
+      if (_ourMarkers.isNotEmpty) {
+        print(_ourMarkers.last);
+      }
+    });
     // Future<Record> r1 = fc.fetchRecord(1);
     // r1.then((value) => value.printDebug1());
-    _ourMarkers.addAll(objectsNearby
-        .map((point) =>
-        Marker(
-            point: point,
-            width: 60,
-            height: 60,
-            builder: (context) =>
-                Icon(Icons.flag_rounded, size: 60, color: Colors.blueAccent)))
-        .toList());
     super.initState();
   }
 
-  List<LatLng> objectsNearby = [
-    LatLng(49.01358967154513, 8.404437624549605),
-    LatLng(50.03111935248694, 9.50641335880519),
-    LatLng(50.59453579029447, 9.09409549394147),
-    LatLng(49.05782579488481, 9.99637829327629),
-    LatLng(48.28978577551132, 8.11155515664592),
-    LatLng(50.83918481074443, 8.59033195643448),
-    LatLng(48.93699220770547, 8.91040842128563),
-    LatLng(50.05733722085694, 7.35620412422381)
-  ];
   PopupController _popupController = PopupController();
   MapController _mapController = MapController();
-  List<Marker> _ourMarkers = [
-    QuestionMarker(
-        questionData: Question(
-            id: 1337,
-            questionTitle: "why tho?",
-            latitude: 49.27305446340209,
-            longitude: 9.17189737808250))
-  ];
+  List<Marker> _ourMarkers = [];
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +105,7 @@ class _MapContainerState extends State<MapContainer> {
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
                 popupBuilder: (_, marker) {
-                  if(marker is QuestionMarker){
+                  if (marker is QuestionMarker) {
                     return Container(
                       alignment: Alignment.center,
                       height: 80,
@@ -110,8 +117,7 @@ class _MapContainerState extends State<MapContainer> {
                         style: TextStyle(color: Colors.white),
                       ),
                     );
-                  }
-                  else if(marker is RecordMarker){
+                  } else if (marker is RecordMarker) {
                     return Container(
                       alignment: Alignment.center,
                       height: 80,
@@ -136,9 +142,7 @@ class _MapContainerState extends State<MapContainer> {
                       style: TextStyle(color: Colors.white),
                     ),
                   );
-                }
-
-            ),
+                }),
             builder: (context, markers) {
               return Container(
                   alignment: Alignment.center,
@@ -188,13 +192,12 @@ class RecordMarker extends Marker {
   RecordMarker(
       {required this.longitude, required this.latitude, required this.isFound})
       : super(
-      anchorPos: AnchorPos.align(AnchorAlign.center),
-      height: 60,
-      width: 60,
-      point: LatLng(latitude, longitude),
-      builder: (BuildContext ctx) =>
-          Icon(Icons.flag_rounded, color: Colors.blueAccent)
-  );
+            anchorPos: AnchorPos.align(AnchorAlign.center),
+            height: 60,
+            width: 60,
+            point: LatLng(latitude, longitude),
+            builder: (BuildContext ctx) =>
+                Icon(Icons.flag_rounded, color: Colors.blueAccent));
 
   final double longitude;
   final double latitude;
@@ -204,11 +207,11 @@ class RecordMarker extends Marker {
 class QuestionMarker extends Marker {
   QuestionMarker({required this.questionData, required this.isFound})
       : super(
-      anchorPos: AnchorPos.align(AnchorAlign.center),
-      height: 60,
-      width: 60,
-      point: LatLng(questionData.latitude, questionData.longitude),
-      builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
+            anchorPos: AnchorPos.align(AnchorAlign.center),
+            height: 60,
+            width: 60,
+            point: LatLng(questionData.latitude, questionData.longitude),
+            builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
 
   final Question questionData;
   final bool isFound;

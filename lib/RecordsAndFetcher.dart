@@ -18,6 +18,8 @@ class FetchContent {
 
   List<RecordViewData> collectibles = UniqueList();
 
+  MyFindings myFindings = MyFindings();
+
   static final FetchContent _instance = FetchContent._internal();
 
   factory FetchContent() => _instance;
@@ -44,6 +46,18 @@ class FetchContent {
   Future<File> _localFile(String filename) async {
     final path = await _localPath;
     return File('$path/$filename');
+  }
+
+  bool isFound(final int id) {
+    return myFindings.foundIDs.contains(id);
+  }
+
+  void addFound(final int id) {
+    return myFindings.foundIDs.add(id);
+  }
+
+  List<int> allFound() {
+    return myFindings.foundIDs;
   }
 
   // Future<File> writeFile() async {
@@ -144,6 +158,16 @@ class RecordViewData {
 
   Record baseRecord;
   String path;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecordViewData &&
+          runtimeType == other.runtimeType &&
+          baseRecord == other.baseRecord;
+
+  @override
+  int get hashCode => baseRecord.hashCode;
 }
 
 Future<List<RecordViewData>> getVisitedRecords() async {
@@ -212,6 +236,15 @@ class Record {
     };
   }
 
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Record && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+
   void save() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString(id.toString(), jsonEncode(this));
@@ -237,4 +270,45 @@ class Record {
         type +
         (username?.toString() ?? ""));
   }
+}
+
+class MyFindings {
+
+  static final String key = "my_findings";
+
+  List<int> foundIDs = UniqueList();
+
+  static final MyFindings _instance = MyFindings._internal();
+
+  factory MyFindings() => _instance;
+
+  MyFindings._internal() {
+    get();
+  }
+
+  void save() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(key, encode());
+  }
+
+  String encode() {
+    return foundIDs.join(",").toString();
+  }
+
+  static List<int> decode(String decoded) {
+    var list = UniqueList<int>();
+    list.addAll(decoded.split(",").map((e) => int.parse(e)));
+    return list;
+  }
+
+  static Future<bool> get() async {
+    final prefs = await SharedPreferences.getInstance();
+    final result = prefs.get(key);
+    MyFindings my = MyFindings();
+    if (result != null) {
+      my.foundIDs = decode(result.toString());
+    }
+    return new Future<bool>.value(true);
+  }
+
 }
