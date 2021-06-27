@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ws/DetailScreen.dart';
 import 'package:flutter_ws/MapScreen.dart';
 import 'package:flutter_ws/RecordsAndFetcher.dart';
+import 'package:flutter_ws/ChatScreen.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -36,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: 4,
+        length: 5,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Baden History'),
@@ -53,7 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   text: 'Quests',
                   icon: Icon(Icons.access_time),
                 ),
-                Tab(text: 'AudioStuff TMP', icon: Icon(Icons.access_alarms))
+                Tab(text: 'AudioStuff TMP', icon: Icon(Icons.access_alarms)),
+                Tab(text: 'Chat', icon: Icon(Icons.access_alarms))
               ],
             ),
           ),
@@ -67,7 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: "Exponat Nr. 15",
                 description: "Das ist Exponat Nr. 15, Lorem ipsum usw.",
               ),
-              AudioGui()
+              AudioGui(),
+              ChatDetailPage()
             ],
             physics: NeverScrollableScrollPhysics(),
           ),

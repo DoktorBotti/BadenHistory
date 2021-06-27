@@ -28,6 +28,7 @@ class _AudioGuiState extends State<AudioGui> {
   var fromURI = 'app'+'.aac';
   final String user = 'app';
   final myController = TextEditingController();
+  final String myURL = '10.0.2.2:5000';
 
 
   @override
@@ -121,9 +122,8 @@ class _AudioGuiState extends State<AudioGui> {
       'typ': 'comment',
       'username': 'app',
     };
-    final uri = Uri.http('192.168.178.37:5000', '/api/elements/insert/', queryParameters);
     final response = await http.post(
-        Uri.parse('http://192.168.178.37:5000/api/elements/insert/'),
+        Uri.parse('http://'+myURL+'/api/elements/insert/'),
         headers: <String, String>{
       'Content-type': 'application/json',
       },
@@ -136,7 +136,7 @@ class _AudioGuiState extends State<AudioGui> {
 
     final content = jsonDecode(response.body);
 
-    var request = http.MultipartRequest('POST', Uri.parse('http://192.168.178.37:5000/api/elements/' + content["id"].toString() + '/upload_voice/'));
+    var request = http.MultipartRequest('POST', Uri.parse('http://'+myURL+'/api/elements/' + content["id"].toString() + '/upload_voice/'));
     var voice = await http.MultipartFile.fromPath("file", url);
     request.files.add(voice);
     var res = await request.send();
@@ -144,13 +144,13 @@ class _AudioGuiState extends State<AudioGui> {
   }
 
   void download() async {
-    final uri = Uri.http('192.168.178.37:5000', '/api/voices/'+myController.text+'/');
+    final uri = Uri.http(myURL, '/api/voices/'+myController.text+'/');
 
     final response = await http.get(uri);
 
     print(response.body);
     var tempDir = await getTemporaryDirectory();
-    var path = '${tempDir.path}/flutter_sound_tmp.wav';
+    var path = '${tempDir.path}';
     var file = new File(path+myController.text+".aac");
     file.writeAsBytes(response.bodyBytes);
     fromURI = file.absolute.path;
