@@ -16,47 +16,54 @@ class MapContainer extends StatefulWidget {
 }
 
 class _MapContainerState extends State<MapContainer> {
-
   @override
   void initState() {
-    objectsNearby.clear();
+    var newMarkers = UniqueList<Marker>();
     var fc = FetchContent();
     fc.syncData().then((value) {
-      for(final collectible in fc.collectibles) {
-        objectsNearby.add(LatLng(collectible.baseRecord.x!, collectible.baseRecord.y!));
-        print(collectible.baseRecord.x.toString() + collectible.baseRecord.y.toString());
+      for (final collectible in fc.collectibles) {
+        bool alreadyFound = fc.isFound(collectible.baseRecord.id);
+        if (collectible.baseRecord.longitude == null ||
+            collectible.baseRecord.latitude == null) {
+          continue;
+        }
+        if (collectible.baseRecord.type == "collectable") {
+          newMarkers.add(RecordMarker(
+              longitude: collectible.baseRecord.y!,
+              latitude: collectible.baseRecord.x!,
+              isFound: alreadyFound,
+              id: collectible.baseRecord.id));
+        } else if (collectible.baseRecord.type == "question") {
+          var questionD = Question(
+              id: collectible.baseRecord.id,
+              questionTitle: collectible.baseRecord.title!,
+              longitude: collectible.baseRecord.y!,
+              latitude: collectible.baseRecord.x!);
+          newMarkers.add(QuestionMarker(
+              questionData: questionD,
+              isFound: alreadyFound,
+              id: collectible.baseRecord.id));
+        }
+        // then it must be comment or audio. Ignoring.
+
+        print(collectible.baseRecord.x.toString() +
+            collectible.baseRecord.y.toString());
       }
-      print(objectsNearby);
-      var markers = UniqueList<Marker>();
-          markers.addAll(objectsNearby
-          .map((point) => Marker(
-          point: point,
-          width: 60,
-          height: 60,
-          builder: (context) =>
-              Icon(Icons.flag_rounded, size: 60, color: Colors.blueAccent)))
-          .toList());
-        setState(() {
-          _ourMarkers = markers;
-        });
+      setState(() {
+        _ourMarkers = newMarkers;
+      });
+      if (_ourMarkers.isNotEmpty) {
+        print(_ourMarkers.last);
+      }
     });
     // Future<Record> r1 = fc.fetchRecord(1);
     // r1.then((value) => value.printDebug1());
     super.initState();
   }
 
-  List<LatLng> objectsNearby = [
-  ];
   PopupController _popupController = PopupController();
   MapController _mapController = MapController();
-  List<Marker> _ourMarkers = [
-    QuestionMarker(
-        questionData: Question(
-            id: 1337,
-            questionTitle: "why tho?",
-            latitude: 49.27305446340209,
-            longitude: 9.17189737808250))
-  ];
+  List<Marker> _ourMarkers = [];
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +87,14 @@ class _MapContainerState extends State<MapContainer> {
           subdomains: ['a', 'b', 'c'],
         ),
         LocationOptions(locationButton(), onLocationUpdate: (LatLngData? ld) {
-          print("${ld?.location}");
+          var fc = FetchContent();
+          fc.setLocation(ld!.location);
         }, onLocationRequested: (LatLngData? ld) {
           if (ld == null) {
             return;
           }
           _mapController.move(ld.location, 16.0);
         }),
-
         MarkerClusterLayerOptions(
             markers: _ourMarkers,
             maxClusterRadius: 190,
@@ -101,17 +108,67 @@ class _MapContainerState extends State<MapContainer> {
             popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
-                popupBuilder: (_, marker) => Container(
+                popupBuilder: (_, marker) {
+                  var fc = FetchContent();
+                  if (marker is QuestionMarker) {
+                    fc.addFound(marker.id);
+                    var newMarkers = _ourMarkers;
+                    newMarkers.remove(marker);
+                    var foundM = RecordMarker(
+                        longitude: marker.questionData.longitude,
+                        latitude: marker.questionData.latitude,
+                        isFound: true,
+                        id: marker.id);
+                    newMarkers.add(foundM);
+                    _ourMarkers = newMarkers;
+
+                    return Container(
                       alignment: Alignment.center,
                       height: 80,
                       width: 80,
                       decoration: BoxDecoration(
                           color: Colors.black, shape: BoxShape.rectangle),
                       child: Text(
-                        'Go near this object to find out more',
+                        'I\'m a question!',
                         style: TextStyle(color: Colors.white),
                       ),
-                    )),
+                    );
+                  } else if (marker is RecordMarker) {
+                    fc.addFound(marker.id);
+                    var newMarkers = _ourMarkers;
+                    newMarkers.remove(marker);
+                    var foundM = RecordMarker(
+                        longitude: marker.longitude,
+                        latitude: marker.latitude,
+                        isFound: true,
+                        id: marker.id);
+                    newMarkers.add(foundM);
+                    _ourMarkers = newMarkers;
+                    return Container(
+                      alignment: Alignment.center,
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.black, shape: BoxShape.rectangle),
+                      child: Text(
+                        'I am an report!',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
+
+                  return Container(
+                    alignment: Alignment.center,
+                    height: 80,
+                    width: 80,
+                    decoration: BoxDecoration(
+                        color: Colors.black, shape: BoxShape.rectangle),
+                    child: Text(
+                      'AAAAAAHHHHHH',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }),
             builder: (context, markers) {
               return Container(
                   alignment: Alignment.center,
@@ -157,14 +214,38 @@ LocationButtonBuilder locationButton() {
   };
 }
 
-class QuestionMarker extends Marker {
-  QuestionMarker({required this.questionData})
+class RecordMarker extends Marker {
+  RecordMarker(
+      {required this.longitude,
+      required this.latitude,
+      required this.isFound,
+      required this.id})
       : super(
-            anchorPos: AnchorPos.align(AnchorAlign.top),
+            anchorPos: AnchorPos.align(AnchorAlign.center),
+            height: 60,
+            width: 60,
+            point: LatLng(latitude, longitude),
+            builder: (BuildContext ctx) => Icon(Icons.flag_rounded,
+                color: isFound ? Colors.blueAccent : Colors.black));
+
+  final double longitude;
+  final double latitude;
+  final bool isFound;
+  final int id;
+}
+
+class QuestionMarker extends Marker {
+  QuestionMarker(
+      {required this.questionData, required this.isFound, required this.id})
+      : super(
+            anchorPos: AnchorPos.align(AnchorAlign.center),
             height: 60,
             width: 60,
             point: LatLng(questionData.latitude, questionData.longitude),
-            builder: (BuildContext ctx) => Icon(Icons.ac_unit));
+            builder: (BuildContext ctx) => Icon(Icons.ac_unit,
+                color: isFound ? Colors.blueAccent : Colors.black));
 
   final Question questionData;
+  final bool isFound;
+  final int id;
 }

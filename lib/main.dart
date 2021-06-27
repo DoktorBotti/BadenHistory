@@ -31,13 +31,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-  static var tabController;
-
   @override
   Widget build(BuildContext context) {
     return tabController = DefaultTabController(
         length: 5,
+        initialIndex: 1,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Baden History'),
@@ -75,11 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: NeverScrollableScrollPhysics(),
           ),
         ));
-  }
-
-  @override
-  void initState() {
-    final fb = FetchContent();
   }
 }
 

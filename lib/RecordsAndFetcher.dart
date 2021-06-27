@@ -13,6 +13,9 @@ class FetchContent {
   double longitude_min = 8.33;
   double longitude_max = 8.47;
 
+  double long_location = 0.0;
+  double lat_location = 0.0;
+
   List<RecordViewData> collectibles = UniqueList();
 
   MyFindings myFindings = MyFindings();
@@ -45,11 +48,11 @@ class FetchContent {
     return File('$path/$filename');
   }
 
-  Future<bool> isFound(final int id) async {
+  bool isFound(final int id) {
     return myFindings.foundIDs.contains(id);
   }
 
-  void addFound(final int id) async {
+  void addFound(final int id) {
     return myFindings.foundIDs.add(id);
   }
 
@@ -140,6 +143,10 @@ class FetchContent {
       // then throw an exception.
       return new Future<Record>.error("server response != 200");
     }
+  }
+  void setLocation(LatLng newPos){
+    long_location = newPos.longitude;
+    lat_location = newPos.latitude;
   }
 }
 
