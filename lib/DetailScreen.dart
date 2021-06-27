@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class DetailScreen extends StatelessWidget {
-  final String location;
+  final String? location;
   final String imagePath;
   final String title;
-  final String description;
+  final String? description;
 
   const DetailScreen({
     Key? key,
@@ -37,7 +37,7 @@ class DetailScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Text(
-                  location,
+                  (location != null ? location : "")!,
                   style: TextStyle(
                       color: Colors.black.withOpacity(0.6)),
                 ),
@@ -51,7 +51,7 @@ class DetailScreen extends StatelessWidget {
                 constraints: BoxConstraints(
                   maxHeight: 0.4 * MediaQuery.of(context).size.height,
                 ),
-                child: Image.asset(imagePath),
+                child: Image.network(imagePath),
               ),
             ],
           ),
@@ -61,7 +61,7 @@ class DetailScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Text(
-                  description,
+                  (description != null ? location : "")!,
                   style: TextStyle(
                       color: Colors.black.withOpacity(0.6)),
                 ),
@@ -74,13 +74,13 @@ class DetailScreen extends StatelessWidget {
               ButtonBar(
                 alignment: MainAxisAlignment.start,
                 children: [
-                  FlatButton(
+                  TextButton(
                     onPressed: () {
                       // Perform some action
                     },
                     child: const Text('ACTION 1'),
                   ),
-                  FlatButton(
+                  TextButton(
                     onPressed: () {
                       // Perform some action
                     },

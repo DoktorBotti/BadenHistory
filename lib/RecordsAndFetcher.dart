@@ -64,11 +64,17 @@ class FetchContent {
   // }
 
   Future<bool> syncData() async {
-    print("syncing");
     String collectable = RecordType.COLLECTABLE.rep;
+    String question = RecordType.QUESTION.rep;
+    await syncCategory(collectable);
+    return syncCategory(question);
+  }
+
+  Future<bool> syncCategory(final String category) async{
+    print("syncing");
+
     final response = await http.get(
-        Uri.parse('http://192.168.178.37:5000/api/ids/?type="$collectable"'));
-    print('http://192.168.178.37:5000/api/ids/?type="$collectable"');
+        Uri.parse('http://192.168.178.37:5000/api/ids/?type="$category"'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -95,23 +101,25 @@ class FetchContent {
         if (record != null) {
           collectibles
               .add(RecordViewData(record!, await getImageByID(record!.id)));
-          if (!local) {
-            record!.save();
-            print("saved record " + id.values.first.toString());
-          }
-        }
-      }
+    if (!local) {
+    record!.save();
+    print("saved record " + id.values.first.toString());
+    }
+    }
+    }
     } else {
-      // Use local data
-      final prefs = await SharedPreferences.getInstance();
-      for (final key in prefs.getKeys()) {
-        final record = await Record.get(int.parse(key));
-        collectibles.add(RecordViewData(record, await getImageByID(record.id)));
-      }
-      print('Failed to load record');
+    // Use local data
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in prefs.getKeys()) {
+    final record = await Record.get(int.parse(key));
+    collectibles.add(RecordViewData(record, await getImageByID(record.id)));
+    }
+    print('Failed to load record');
     }
     return new Future<bool>.value(true);
   }
+
+
 
   Future<Record?> fetchRecord(final int id) async {
     final response = await http.get(Uri.parse(

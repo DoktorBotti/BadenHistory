@@ -32,11 +32,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
-
+  static var tabController;
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
+    return tabController = DefaultTabController(
         length: 5,
         child: Scaffold(
           appBar: AppBar(
@@ -91,13 +91,102 @@ class FindingsScreen extends StatefulWidget {
 }
 
 class _FindingsScreenState extends State<FindingsScreen> {
+
+  bool _details = false;
+  int selected = 0;
   @override
   Widget build(BuildContext context) {
+
     return Center(
         child: FutureBuilder<List<RecordViewData>>(
       future: getVisitedRecords(),
       builder: (context, rec) {
         if (rec.hasData) {
+          if(_details) {
+            //////////////////////////////////////////////////////
+            /////////////////Details Screen///////////////////////
+            //////////////////////////////////////////////////////
+            return Container(
+              child: Column(
+                  children: [
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            height: 0.1 * MediaQuery.of(context).size.height,
+                            alignment: Alignment.center,
+                            child: Text(
+                                rec.data![selected].baseRecord.title!
+                            ),
+                          ),
+                        ]
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Text(
+                              (rec.data![selected].baseRecord.place != null ? rec.data![selected].baseRecord.place : "")!,
+                              style: TextStyle(
+                                  color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                        ]
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            maxHeight: 0.4 * MediaQuery.of(context).size.height,
+                          ),
+                          child: Image.network(rec.data![selected].path),
+                        ),
+                      ],
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Text(
+                              (rec.data![selected].baseRecord.text != null ? rec.data![selected].baseRecord.text : "")!,
+                              style: TextStyle(
+                                  color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                        ]
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ButtonBar(
+                            alignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  // Perform some action
+
+                                  setState(() {
+                                    _details = false;
+                                  });
+                                  build(context);
+                                  print("pressed back");
+                                },
+                                child: const Text('Back'),
+                              ),
+                            ],
+                          ),
+                        ]
+                    )
+                  ]
+              ),
+            );
+            //////////////////////////////////////////////////////
+            /////////////////Details Screen///////////////////////
+            //////////////////////////////////////////////////////
+          }
           return ListView.builder(
               itemCount: rec.data!.length,
               itemBuilder: (context, i) {
@@ -151,19 +240,26 @@ class _FindingsScreenState extends State<FindingsScreen> {
                               ),
                             ),
                             ButtonBar(
-                              alignment: MainAxisAlignment.start,
+                              alignment: MainAxisAlignment.center,
                               children: [
-                                FlatButton(
+
+                                TextButton(
                                   onPressed: () {
-                                    // Perform some action
+                                    // DefaultTabController.of(context)!.animateTo(2);
+                                    // DefaultTabController.of(context)
+                                    // _HomeScreenState.tabController.animateTo(DetailScreen(location: rec.data![i].baseRecord.place, imagePath: rec.data![i].path,title: rec.data![i].baseRecord.title!, description: rec.data![i].baseRecord.text!,));
+                                    setState(() {
+                                      _details = true;
+                                    });
+                                    selected = i;
+                                    build(context);
+                                    print("pressed, switch to details");
+                                    // Navigator.push(
+                                    //   context,
+                                    //   MaterialPageRoute(builder: (context) => DetailScreen(location: rec.data![i].baseRecord.place, imagePath: rec.data![i].path,title: rec.data![i].baseRecord.title!, description: rec.data![i].baseRecord.text!,)),
+                                    // );
                                   },
-                                  child: const Text('ACTION 1'),
-                                ),
-                                FlatButton(
-                                  onPressed: () {
-                                    // Perform some action
-                                  },
-                                  child: const Text('ACTION 2'),
+                                  child: const Text('Details'),
                                 ),
                               ],
                             ),
