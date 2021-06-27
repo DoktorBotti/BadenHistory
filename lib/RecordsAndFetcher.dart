@@ -7,6 +7,8 @@ import 'package:unique_list/unique_list.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import 'ChatScreen.dart';
+
 class FetchContent {
   double latitude_min = 48.99;
   double latitude_max = 49.036;
@@ -17,6 +19,23 @@ class FetchContent {
   double lat_location = 0.0;
 
   List<RecordViewData> collectibles = UniqueList();
+  Map<int, List<Record>> chats = Map();
+
+  void addRecordtoChat(int id, Record record) {
+    if (chats[id] == null) {
+      chats[id] = List.of({record});
+    } else {
+      chats[id]!.add(record);
+    }
+  }
+
+  List<Record> getRecords(int id) {
+    if (chats[id] == null) {
+      return List.empty();
+    } else {
+      return chats[id]!;
+    }
+  }
 
   MyFindings myFindings = MyFindings();
 
@@ -67,11 +86,31 @@ class FetchContent {
   // }
 
   Future<bool> syncData() async {
-    print("syncing");
     String collectable = RecordType.COLLECTABLE.rep;
+    String question = RecordType.QUESTION.rep;
+    String comment = RecordType.COMMENT.rep;
+    await syncCategory(collectable);
+    await syncCategory(comment);
+    fetchComments();
+    return syncCategory(question);
+  }
+
+  void fetchComments() {
+    chats.clear();
+    String comment = RecordType.COMMENT.rep;
+    syncCategory(comment);
+    for(Record rec in collectibles.map((e) => e.baseRecord)){
+      if(rec.type == RecordType.COMMENT.rep) {
+        addRecordtoChat(rec.id, rec);
+      }
+    }
+  }
+
+  Future<bool> syncCategory(final String category) async{
+    print("syncing");
+
     final response = await http.get(
-        Uri.parse('http://192.168.178.37:5000/api/ids/?type="$collectable"'));
-    print('http://192.168.178.37:5000/api/ids/?type="$collectable"');
+        Uri.parse('http://192.168.178.37:5000/api/ids/?type="$category"'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -98,23 +137,25 @@ class FetchContent {
         if (record != null) {
           collectibles
               .add(RecordViewData(record!, await getImageByID(record!.id)));
-          if (!local) {
-            record!.save();
-            print("saved record " + id.values.first.toString());
-          }
-        }
-      }
+    if (!local) {
+    record!.save();
+    print("saved record " + id.values.first.toString());
+    }
+    }
+    }
     } else {
-      // Use local data
-      final prefs = await SharedPreferences.getInstance();
-      for (final key in prefs.getKeys()) {
-        final record = await Record.get(int.parse(key));
-        collectibles.add(RecordViewData(record, await getImageByID(record.id)));
-      }
-      print('Failed to load record');
+    // Use local data
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in prefs.getKeys()) {
+    final record = await Record.get(int.parse(key));
+    collectibles.add(RecordViewData(record, await getImageByID(record.id)));
+    }
+    print('Failed to load record');
     }
     return new Future<bool>.value(true);
   }
+
+
 
   Future<Record?> fetchRecord(final int id) async {
     final response = await http.get(Uri.parse(
