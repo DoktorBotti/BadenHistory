@@ -6,6 +6,7 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:unique_list/unique_list.dart';
 
+import 'DetailScreen.dart';
 import 'RecordsAndFetcher.dart';
 
 class MapContainer extends StatefulWidget {
@@ -144,6 +145,20 @@ class _MapContainerState extends State<MapContainer> {
                             _ourMarkers = newMarkers;
                           });
                         }
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    FutureBuilder(future: buldFc.getImageByID(marker is RecordMarker ? marker.id : marker is QuestionMarker ? marker.id : 0),
+                                    builder: (context, img) =>
+                                        DetailScreen(
+                                      location: "Karlsruhe",
+                                      imagePath: img.data.toString(),
+                                      title: "Exponat Nr. 15",
+                                      description: "Das ist Exponat Nr. 15, Lorem ipsum usw.",
+                                    )
+                                  ))
+                            );
                       },
                       child: FutureBuilder(
                           future: buldFc.getImageByID(marker is QuestionMarker
