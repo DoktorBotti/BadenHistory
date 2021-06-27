@@ -23,22 +23,26 @@ class _MapContainerState extends State<MapContainer> {
     fc.syncData().then((value) {
       for (final collectible in fc.collectibles) {
         bool alreadyFound = fc.isFound(collectible.baseRecord.id);
-        if(collectible.baseRecord.longitude == null || collectible.baseRecord.latitude == null){
+        if (collectible.baseRecord.longitude == null ||
+            collectible.baseRecord.latitude == null) {
           continue;
         }
         if (collectible.baseRecord.type == "collectable") {
           newMarkers.add(RecordMarker(
-              longitude: collectible.baseRecord.x!,
-              latitude: collectible.baseRecord.y!,
-              isFound: alreadyFound));
+              longitude: collectible.baseRecord.y!,
+              latitude: collectible.baseRecord.x!,
+              isFound: alreadyFound,
+              id: collectible.baseRecord.id));
         } else if (collectible.baseRecord.type == "question") {
           var questionD = Question(
               id: collectible.baseRecord.id,
               questionTitle: collectible.baseRecord.title!,
-              longitude: collectible.baseRecord.x!,
-              latitude: collectible.baseRecord.y!);
-          newMarkers.add(
-              QuestionMarker(questionData: questionD, isFound: alreadyFound));
+              longitude: collectible.baseRecord.y!,
+              latitude: collectible.baseRecord.x!);
+          newMarkers.add(QuestionMarker(
+              questionData: questionD,
+              isFound: alreadyFound,
+              id: collectible.baseRecord.id));
         }
         // then it must be comment or audio. Ignoring.
 
@@ -105,7 +109,19 @@ class _MapContainerState extends State<MapContainer> {
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
                 popupBuilder: (_, marker) {
+                  var fc = FetchContent();
                   if (marker is QuestionMarker) {
+                    fc.addFound(marker.id);
+                    var newMarkers = _ourMarkers;
+                    newMarkers.remove(marker);
+                    var foundM = RecordMarker(
+                        longitude: marker.questionData.longitude,
+                        latitude: marker.questionData.latitude,
+                        isFound: true,
+                        id: marker.id);
+                    newMarkers.add(foundM);
+                    _ourMarkers = newMarkers;
+
                     return Container(
                       alignment: Alignment.center,
                       height: 80,
@@ -118,6 +134,16 @@ class _MapContainerState extends State<MapContainer> {
                       ),
                     );
                   } else if (marker is RecordMarker) {
+                    fc.addFound(marker.id);
+                    var newMarkers = _ourMarkers;
+                    newMarkers.remove(marker);
+                    var foundM = RecordMarker(
+                        longitude: marker.longitude,
+                        latitude: marker.latitude,
+                        isFound: true,
+                        id: marker.id);
+                    newMarkers.add(foundM);
+                    _ourMarkers = newMarkers;
                     return Container(
                       alignment: Alignment.center,
                       height: 80,
@@ -190,29 +216,36 @@ LocationButtonBuilder locationButton() {
 
 class RecordMarker extends Marker {
   RecordMarker(
-      {required this.longitude, required this.latitude, required this.isFound})
+      {required this.longitude,
+      required this.latitude,
+      required this.isFound,
+      required this.id})
       : super(
             anchorPos: AnchorPos.align(AnchorAlign.center),
             height: 60,
             width: 60,
             point: LatLng(latitude, longitude),
-            builder: (BuildContext ctx) =>
-                Icon(Icons.flag_rounded, color: Colors.blueAccent));
+            builder: (BuildContext ctx) => Icon(Icons.flag_rounded,
+                color: isFound ? Colors.blueAccent : Colors.black));
 
   final double longitude;
   final double latitude;
   final bool isFound;
+  final int id;
 }
 
 class QuestionMarker extends Marker {
-  QuestionMarker({required this.questionData, required this.isFound})
+  QuestionMarker(
+      {required this.questionData, required this.isFound, required this.id})
       : super(
             anchorPos: AnchorPos.align(AnchorAlign.center),
             height: 60,
             width: 60,
             point: LatLng(questionData.latitude, questionData.longitude),
-            builder: (BuildContext ctx) => Icon(Icons.ac_unit));
+            builder: (BuildContext ctx) => Icon(Icons.ac_unit,
+                color: isFound ? Colors.blueAccent : Colors.black));
 
   final Question questionData;
   final bool isFound;
+  final int id;
 }
