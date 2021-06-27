@@ -33,7 +33,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return tabController = DefaultTabController(
+    return DefaultTabController(
         length: 5,
         initialIndex: 1,
         child: Scaffold(
