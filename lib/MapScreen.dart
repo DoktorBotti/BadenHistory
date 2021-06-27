@@ -112,7 +112,23 @@ class _MapContainerState extends State<MapContainer> {
                   var buldFc = FetchContent();
                   return GestureDetector(
                       onTap: () {
+                        print("Tapped flag!");
                         var fc = FetchContent();
+                        if (marker is RecordMarker) {
+                          fc.addFound(marker.id);
+                          var newMarkers = _ourMarkers;
+                          newMarkers.remove(marker);
+                          var foundM = RecordMarker(
+                            longitude: marker.longitude,
+                            latitude: marker.latitude,
+                            isFound: true,
+                            id: marker.id,
+                          );
+                          newMarkers.add(foundM);
+                          setState(() {
+                            _ourMarkers = newMarkers;
+                          });
+                        }
                         if (marker is QuestionMarker) {
                           fc.addFound(marker.id);
                           var newMarkers = _ourMarkers;
@@ -140,11 +156,17 @@ class _MapContainerState extends State<MapContainer> {
                                 height: 80,
                                 width: 80,
                                 decoration: BoxDecoration(
-                                    color: Colors.black,
+                                    color: Colors.white,
                                     shape: BoxShape.rectangle,
                                     border: Border.all(
                                         width: 2, color: Colors.black54)),
-                                child: Image.network(img.data.toString()),
+                                child: PopupDisplayMap(
+                                    imageSource: img.data.toString(),
+                                    id: marker is QuestionMarker
+                                        ? marker.id
+                                        : marker is RecordMarker
+                                            ? marker.id
+                                            : 0),
                               )));
                 }),
             builder: (context, markers) {
@@ -226,4 +248,16 @@ class QuestionMarker extends Marker {
   final Question questionData;
   final bool isFound;
   final int id;
+}
+
+class PopupDisplayMap extends StatelessWidget {
+  const PopupDisplayMap({Key? key, required this.imageSource, required this.id})
+      : super(key: key);
+  final int id;
+  final String imageSource;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(imageSource);
+  }
 }
