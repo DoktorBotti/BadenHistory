@@ -109,7 +109,7 @@ class _MapContainerState extends State<MapContainer> {
             popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: _popupController,
-                popupBuilder: (_, marker) {
+                popupBuilder: (popupContext, marker) {
                   var buldFc = FetchContent();
                   return GestureDetector(
                       onTap: () {
@@ -145,18 +145,25 @@ class _MapContainerState extends State<MapContainer> {
                             _ourMarkers = newMarkers;
                           });
                         }
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => FutureBuilder(
-                                    future: buldFc
-                                        .getImageByID(marker is RecordMarker
-                                            ? marker.id
-                                            : marker is QuestionMarker
-                                                ? marker.id
-                                                : 0),
-                                    builder: (context, img) => Text(
-                                        "This would have been a detail"))));
+                        showDialog(context: popupContext,
+                            builder: (context) =>
+                        FutureBuilder(
+                            future: buldFc
+                                .getImageByID(marker is RecordMarker
+                                ? marker.id
+                                : marker is QuestionMarker
+                                ? marker.id
+                                : 0),
+                            builder: (context, img) => Dialog(child: DetailScreen(
+                                id: 5,
+                                title: "title",
+                                location: "Ulm",
+                                latitude: 49.0,
+                                longitude: 9.3,
+                                imagePath: img.data.toString(),
+                                description: "lorem ipsum"))
+                        )
+                        );
                       },
                       child: FutureBuilder(
                           future: buldFc.getImageByID(marker is QuestionMarker
