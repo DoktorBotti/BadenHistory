@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ws/DetailScreen.dart';
 import 'package:flutter_ws/MapScreen.dart';
 import 'package:flutter_ws/RecordsAndFetcher.dart';
+import 'package:flutter_ws/ChatScreen.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: 4,
+        length: 5,
         initialIndex: 1,
         child: Scaffold(
           appBar: AppBar(
@@ -51,7 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   text: 'Quests',
                   icon: Icon(Icons.access_time),
                 ),
-                Tab(text: 'AudioStuff TMP', icon: Icon(Icons.access_alarms))
+                Tab(text: 'AudioStuff TMP', icon: Icon(Icons.access_alarms)),
+                Tab(text: 'Chat', icon: Icon(Icons.access_alarms))
               ],
             ),
           ),
@@ -60,9 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
               FindingsScreen(),
               MapContainer(),
               DetailScreen(
+                location: "Karlsruhe",
                 imagePath: "assets/testimage.jpg",
+                title: "Exponat Nr. 15",
+                description: "Das ist Exponat Nr. 15, Lorem ipsum usw.",
               ),
-              AudioGui()
+              AudioGui(),
+              ChatDetailPage()
             ],
             physics: NeverScrollableScrollPhysics(),
           ),
@@ -116,14 +122,14 @@ class _FindingsScreenState extends State<FindingsScreen> {
                               width: 0.5 *
                                   MediaQuery.of(context).size.width, // 60%
                               alignment: Alignment.centerLeft,
-                              child: Text(rec.data![i].baseRecord.title),
+                              child: Text(rec.data![i].baseRecord.title!),
                             ),
                           ]),
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: Text(
-                                rec.data![i].baseRecord.place,
+                                rec.data![i].baseRecord.place!,
                                 style: TextStyle(
                                     color: Colors.black.withOpacity(0.6)),
                               ),
@@ -132,7 +138,7 @@ class _FindingsScreenState extends State<FindingsScreen> {
                             Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: Text(
-                                rec.data![i].baseRecord.text,
+                                rec.data![i].baseRecord.text!,
                                 style: TextStyle(
                                     color: Colors.black.withOpacity(0.6)),
                               ),

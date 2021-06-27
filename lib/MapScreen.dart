@@ -28,15 +28,15 @@ class _MapContainerState extends State<MapContainer> {
         }
         if (collectible.baseRecord.type == "collectable") {
           newMarkers.add(RecordMarker(
-              longitude: collectible.baseRecord.longitude!,
-              latitude: collectible.baseRecord.latitude!,
+              longitude: collectible.baseRecord.x!,
+              latitude: collectible.baseRecord.y!,
               isFound: alreadyFound));
         } else if (collectible.baseRecord.type == "question") {
           var questionD = Question(
               id: collectible.baseRecord.id,
               questionTitle: collectible.baseRecord.title!,
-              longitude: collectible.baseRecord.longitude!,
-              latitude: collectible.baseRecord.latitude!);
+              longitude: collectible.baseRecord.x!,
+              latitude: collectible.baseRecord.y!);
           newMarkers.add(
               QuestionMarker(questionData: questionD, isFound: alreadyFound));
         }
@@ -211,7 +211,7 @@ class QuestionMarker extends Marker {
             height: 60,
             width: 60,
             point: LatLng(questionData.latitude, questionData.longitude),
-            builder: (BuildContext ctx) => Icon(Icons.quiz_rounded));
+            builder: (BuildContext ctx) => Icon(Icons.ac_unit));
 
   final Question questionData;
   final bool isFound;

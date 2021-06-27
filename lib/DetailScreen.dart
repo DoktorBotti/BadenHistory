@@ -1,77 +1,97 @@
 import 'package:flutter/material.dart';
 
 class DetailScreen extends StatelessWidget {
+  final String location;
   final String imagePath;
+  final String title;
+  final String description;
 
-
-  const DetailScreen({Key? key, required this.imagePath}) : super(key: key);
+  const DetailScreen({
+    Key? key,
+    required this.location,
+    required this.imagePath,
+    required this.title,
+    required this.description
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Center(
-                        child: Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(width: 2)
-                          ),
-                          child: Image.asset(
-                            imagePath,
-                            fit: BoxFit.fitHeight,
-                          ),
-                        )
-                    ),
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.4,
-                    ),
-                  ),
-                )
-              ],
-            ),
-            Padding(
-              padding: EdgeInsets.all(15.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 2)
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 0.1 * MediaQuery.of(context).size.height,
+                alignment: Alignment.center,
+                child: Text(
+                    title
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        color: Colors.lightBlue,
-                        child: Column(
-                          children: [
-                            Text("Hallo")
-                          ]
-                        ),
-                      )
-                    ),
-                    Expanded(
-                      child: Container(
-                        color: Colors.lightGreen,
-                        child: Column(
-                          children: [
-                            Text("Hallo")
-                          ]
-                        ),
-                      )
-                    )
-                  ]
-                )
-              )
-            )
-          ]
-      )
+              ),
+            ]
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  location,
+                  style: TextStyle(
+                      color: Colors.black.withOpacity(0.6)),
+                ),
+              ),
+            ]
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  maxHeight: 0.4 * MediaQuery.of(context).size.height,
+                ),
+                child: Image.asset(imagePath),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  description,
+                  style: TextStyle(
+                      color: Colors.black.withOpacity(0.6)),
+                ),
+              ),
+            ]
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ButtonBar(
+                alignment: MainAxisAlignment.start,
+                children: [
+                  FlatButton(
+                    onPressed: () {
+                      // Perform some action
+                    },
+                    child: const Text('ACTION 1'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      // Perform some action
+                    },
+                    child: const Text('ACTION 2'),
+                  ),
+                ],
+              ),
+            ]
+          )
+        ]
+      ),
     );
   }
 }
