@@ -464,6 +464,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 userName: "sender",
                                 messageType: "text",
                                 id: 8));
+                            myController.text = "";
                           }
                         },
                       );

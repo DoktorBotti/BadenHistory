@@ -7,6 +7,8 @@ import 'package:unique_list/unique_list.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import 'ChatScreen.dart';
+
 class FetchContent {
   double latitude_min = 48.99;
   double latitude_max = 49.036;
@@ -17,6 +19,23 @@ class FetchContent {
   double lat_location = 0.0;
 
   List<RecordViewData> collectibles = UniqueList();
+  Map<int, List<Record>> chats = Map();
+
+  void addRecordtoChat(int id, Record record) {
+    if (chats[id] == null) {
+      chats[id] = List.of({record});
+    } else {
+      chats[id]!.add(record);
+    }
+  }
+
+  List<Record> getRecords(int id) {
+    if (chats[id] == null) {
+      return List.empty();
+    } else {
+      return chats[id]!;
+    }
+  }
 
   MyFindings myFindings = MyFindings();
 
@@ -69,8 +88,22 @@ class FetchContent {
   Future<bool> syncData() async {
     String collectable = RecordType.COLLECTABLE.rep;
     String question = RecordType.QUESTION.rep;
+    String comment = RecordType.COMMENT.rep;
     await syncCategory(collectable);
+    await syncCategory(comment);
+    fetchComments();
     return syncCategory(question);
+  }
+
+  void fetchComments() {
+    chats.clear();
+    String comment = RecordType.COMMENT.rep;
+    syncCategory(comment);
+    for(Record rec in collectibles.map((e) => e.baseRecord)){
+      if(rec.type == RecordType.COMMENT.rep) {
+        addRecordtoChat(rec.id, rec);
+      }
+    }
   }
 
   Future<bool> syncCategory(final String category) async{
