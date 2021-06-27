@@ -13,6 +13,9 @@ class FetchContent {
   double longitude_min = 8.33;
   double longitude_max = 8.47;
 
+  double long_location = 0.0;
+  double lat_location = 0.0;
+
   List<RecordViewData> collectibles = UniqueList();
 
   MyFindings myFindings = MyFindings();
@@ -45,11 +48,11 @@ class FetchContent {
     return File('$path/$filename');
   }
 
-  Future<bool> isFound(final int id) async {
+  bool isFound(final int id) {
     return myFindings.foundIDs.contains(id);
   }
 
-  void addFound(final int id) async {
+  void addFound(final int id) {
     return myFindings.foundIDs.add(id);
   }
 
@@ -64,9 +67,17 @@ class FetchContent {
   // }
 
   Future<bool> syncData() async {
+    String collectable = RecordType.COLLECTABLE.rep;
+    String question = RecordType.QUESTION.rep;
+    await syncCategory(collectable);
+    return syncCategory(question);
+  }
+
+  Future<bool> syncCategory(final String category) async{
     print("syncing");
+
     final response = await http.get(
-        Uri.parse('http://192.168.178.37:5000/api/ids/?type="collectable"'));
+        Uri.parse('http://192.168.178.37:5000/api/ids/?type="$category"'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -93,23 +104,25 @@ class FetchContent {
         if (record != null) {
           collectibles
               .add(RecordViewData(record!, await getImageByID(record!.id)));
-          if (!local) {
-            record!.save();
-            print("saved record " + id.values.first.toString());
-          }
-        }
-      }
+    if (!local) {
+    record!.save();
+    print("saved record " + id.values.first.toString());
+    }
+    }
+    }
     } else {
-      // Use local data
-      final prefs = await SharedPreferences.getInstance();
-      for (final key in prefs.getKeys()) {
-        final record = await Record.get(int.parse(key));
-        collectibles.add(RecordViewData(record, await getImageByID(record.id)));
-      }
-      print('Failed to load record');
+    // Use local data
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in prefs.getKeys()) {
+    final record = await Record.get(int.parse(key));
+    collectibles.add(RecordViewData(record, await getImageByID(record.id)));
+    }
+    print('Failed to load record');
     }
     return new Future<bool>.value(true);
   }
+
+
 
   Future<Record?> fetchRecord(final int id) async {
     final response = await http.get(Uri.parse(
@@ -130,6 +143,10 @@ class FetchContent {
       // then throw an exception.
       return new Future<Record>.error("server response != 200");
     }
+  }
+  void setLocation(LatLng newPos){
+    long_location = newPos.longitude;
+    lat_location = newPos.latitude;
   }
 }
 
@@ -170,17 +187,19 @@ Future<List<RecordViewData>> getVisitedRecords() async {
 
 class Record {
   final int id;
-  final double x;
-  final double y;
+  final double? x;
+  final double? y;
   final String? image;
-  final String title;
-  final String text;
-  final String place;
+  final String? title;
+  final String? text;
+  final String? place;
   final double? latitude;
   final double? longitude;
   final String? voice;
   final String type;
   final String? username;
+  final int? linkTo;
+  final double? time;
 
   const Record(
       {required this.title,
@@ -194,7 +213,9 @@ class Record {
       required this.text,
       required this.voice,
       required this.type,
-      required this.username});
+      required this.username,
+        required this.linkTo,
+        required this.time});
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
@@ -209,7 +230,9 @@ class Record {
         longitude: json['longitude'],
         voice: json['voice'],
         type: json['type'],
-        username: json['username']);
+        username: json['username'],
+        linkTo: json['linkTo'],
+        time: json['time']);
   }
 
   Map<String, dynamic> toJson() {
@@ -225,7 +248,9 @@ class Record {
       'longitude': longitude,
       'voice': voice,
       'type': type,
-      'username': username
+      'username': username,
+      'linkTo': linkTo,
+      'time': time
     };
   }
 
@@ -258,7 +283,7 @@ class Record {
         " " +
         y.toString() +
         (image?.toString() ?? "") +
-        text +
+        text! +
         (voice?.toString() ?? "") +
         type +
         (username?.toString() ?? ""));
@@ -304,4 +329,28 @@ class MyFindings {
     return new Future<bool>.value(true);
   }
 
+}
+
+enum RecordType {
+  RECORD,COMMENT,AUDIO,COLLECTABLE,QUESTION,IMAGE
+}
+
+extension RecordTypeRep on RecordType {
+  String get rep {
+    switch (this) {
+
+      case RecordType.RECORD:
+        return "record";
+      case RecordType.COMMENT:
+        return "comment";
+      case RecordType.AUDIO:
+        return "audio";
+      case RecordType.COLLECTABLE:
+        return "collectable";
+      case RecordType.QUESTION:
+        return "question";
+      case RecordType.IMAGE:
+        return "image";
+    }
+  }
 }
